@@ -3,7 +3,7 @@ import os
 
 sys.path.append(os.path.dirname(__file__))
 
-from comparison_utils import compare_titles  # OR whichever one is correct
+from comparison_utils import process_files  # OR whichever one is correct
 
 import streamlit as st
 import pandas as pd
