@@ -1,21 +1,15 @@
 import sys
 import os
 
-# Ensure current directory is in the Python path
 sys.path.append(os.path.dirname(__file__))
 
-print("Current working directory:", os.getcwd())
-print("Files in this directory:", os.listdir(os.getcwd()))
-sys.path.append(os.getcwd())
-
-from comparison_utils import compare_titles
-
+from comparison_utils import compare_titles  # OR whichever one is correct
 
 import streamlit as st
 import pandas as pd
-from new_title_comparison import compare_titles
-
+from new_title_comparison import compare_titles  # Comment this out if not needed
 import io
+
 
 
 # Set page config
