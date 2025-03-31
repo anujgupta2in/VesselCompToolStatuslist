@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
-from subfolder.new_title_comparison import compare_titles
-from subfolder.comparison_utils import compare_titles
-
+from new_title_comparison import compare_titles
+from comparison_utils import compare_titles
 import io
+
 
 # Set page config
 st.set_page_config(
