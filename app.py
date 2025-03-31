@@ -1,3 +1,10 @@
+import sys
+import os
+
+# Ensure current directory is in the Python path
+sys.path.append(os.path.dirname(__file__))
+
+
 import streamlit as st
 import pandas as pd
 from new_title_comparison import compare_titles
