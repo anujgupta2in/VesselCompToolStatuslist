@@ -19,8 +19,10 @@ def rename_machinery(value):
     """Apply renaming rules to machinery values."""
     rename_mapping = {
         r"P1$": " P", r"Port1$": " P", r"S1$": " S", r"Starboard1$": " S", 
-        r"S2$": " S", r"Starboard2$": " S", r"F$": " F", r"Forward$": " F", 
-        r"A$": " A", r"Aft$": " A", r"P$": " P", r"Port$": " P", r"S$": " S", 
+        r"S2$": " S", r"Starboard2$": " S", r"F$": " F", r"Forward$": " F",
+        r"S2$": " S", r"Starboard2$": " S", r"F1$": " F", r"Forward1$": " F",
+        r"A$": " A", r"Aft$": " A", r"P$": " P", r"Port$": " P", r"S$": " S",
+        r"A1$": " A", r"Aft1$": " A", r"P1$": " P", r"Port1$": " P", r"S1$": " S",
         r"Starboard$": " S", r"Lifeboat DavitA$": " Lifeboat Davit A",
         r"Lifeboat DavitAft$": " Lifeboat Davit A", r"LifeboatA$": " Lifeboat A",
         r"LifeboatAft$": " Lifeboat A", r"Liferaft 6 PersonF$": " Liferaft 6 Person F",
