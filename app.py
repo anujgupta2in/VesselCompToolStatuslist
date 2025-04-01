@@ -1,16 +1,9 @@
-import sys
-import os
-
-sys.path.append(os.path.dirname(__file__))
-
-from comparison_utils import process_files  # OR whichever one is correct
-
 import streamlit as st
 import pandas as pd
-from new_title_comparison import compare_titles  # Comment this out if not needed
+from new_title_comparison import compare_titles
+from comparison_utils import process_files
+
 import io
-
-
 
 # Set page config
 st.set_page_config(
@@ -90,7 +83,7 @@ if file1 is not None and file2 is not None:
         st.exception(e)
 
 # Create tabs for different views
-tab1, tab2 = st.tabs(["Job Title Comparison", "Machinery Count Comparison"])
+tab1, tab2= st.tabs(["Job Title Comparison", "Machinery Count Comparison"])
 
 # Job Title Comparison Tab
 with tab1:
@@ -283,3 +276,6 @@ with tab2:
         """)
     else:
         st.info("Please upload both CSV files to generate the machinery count comparison report.")
+
+
+

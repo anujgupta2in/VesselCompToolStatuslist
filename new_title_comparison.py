@@ -31,10 +31,26 @@ def rename_machinery(value):
     rename_mapping = {
         r"P1$": " P", r"Port1$": " P", r"S1$": " S", r"Starboard1$": " S", 
         r"S2$": " S", r"Starboard2$": " S", r"F$": " F", r"Forward$": " F", 
-        r"A$": " A", r"Aft$": " A", r"P$": " P", r"Port$": " P", r"S$": " S", 
+        r"S1$": " S", r"Starboard1$": " S", r"F1$": " F", r"Forward1$": " F",
+        r"S2$": " S", r"Starboard2$": " S", r"F2$": " F", r"Forward2$": " F",
+        r"A$": " A", r"Aft$": " A", r"P$": " P", r"Port$": " P", r"S$": " S",
+        r"A1$": " A", r"Aft1$": " A", r"P1$": " P", r"Port1$": " P", r"S$": " S",
+        r"A2$": " A", r"Aft2$": " A", r"P2$": " P", r"Port2$": " P", r"S$": " S",
         r"Starboard$": " S", r"Lifeboat DavitA$": " Lifeboat Davit A",
         r"Lifeboat DavitAft$": " Lifeboat Davit A", r"LifeboatA$": " Lifeboat A",
-        r"LifeboatAft$": " Lifeboat A"
+        r"LifeboatAft$": " Lifeboat A", r"Liferaft 6 PersonF$": " Liferaft 6 Person F",
+        r"Liferaft 6 PersonForward$": " Liferaft 6 Person F",
+        r"Liferaft Davit LaunchedP$": " Liferaft Davit Launched P",
+        r"Liferaft Davit LaunchedPort$": " Liferaft Davit Launched P",
+        r"Liferaft Embarkation LadderF$": " Liferaft Embarkation Ladder F",
+        r"Liferaft Embarkation LadderForward$": " Liferaft Embarkation Ladder F",
+        r"Liferaft Embarkation LadderP$": " Liferaft Embarkation Ladder P",
+        r"Liferaft Embarkation LadderPort$": " Liferaft Embarkation Ladder P",
+        r"Liferaft Embarkation LadderS$": " Liferaft Embarkation Ladder S",
+        r"Liferaft Embarkation LadderStarboard$": " Liferaft Embarkation Ladder S",
+        r"Liferaft/Rescue Boat DavitP$": " Liferaft/Rescue Boat Davit P",
+        r"Liferaft/Rescue Boat DavitPort$": " Liferaft/Rescue Boat Davit P",
+        r"LiferaftS$": " Liferaft S", r"LiferaftStarboard$": " Liferaft S"
     }
     
     original_value = str(value).strip()
