@@ -41,7 +41,6 @@ def rename_machinery(value):
         r"A1$": " A", r"Aft1$": " A", r"A2$": " A", r"Aft2$": " A", r"P2$": " P", r"Port2$": " P",
         r"Aft- P$": " A-P", r"A- P$": " A-P", r"F- P$": " F-P", r"Fwd- P$": " F-P",
         r"F- S$": " F-S", r"Fwd-Stbd$": " F-S", r"Starboard$": " S",
-        r"Aft- P$": " A-P", r"A- P$": " A-P", r"F- P$": " F-P", r"Fwd- P$": " F-P", r"F- S$": " F-S",r"Fwd-Stbd$": " F-S",
         r"Lifeboat DavitA$": " Lifeboat Davit A", r"Lifeboat DavitAft$": " Lifeboat Davit A",
         r"LifeboatA$": " Lifeboat A", r"LifeboatAft$": " Lifeboat A",
         r"Liferaft 6 PersonF$": " Liferaft 6 Person F", r"Liferaft 6 PersonForward$": " Liferaft 6 Person F",
