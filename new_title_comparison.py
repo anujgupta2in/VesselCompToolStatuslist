@@ -46,11 +46,11 @@ def rename_machinery(value):
         r"Liferaft Embarkation LadderS$": " Liferaft Embarkation Ladder S", r"Liferaft Embarkation LadderStarboard$": " Liferaft Embarkation Ladder S",
         r"Liferaft/Rescue Boat DavitP$": " Liferaft/Rescue Boat Davit P", r"Liferaft/Rescue Boat DavitPort$": " Liferaft/Rescue Boat Davit P",
         r"LiferaftS$": " Liferaft S", r"LiferaftStarboard$": " Liferaft S"
-        r"Provision CraneA- P$": "Provision Crane A- P",
-        r"Provision CraneAft- P$": "Provision Crane A- P",
-        r"Provision CraneF- P$": "Provision Crane F- P",
-        r"Provision CraneF- S$": "Provision Crane F- S",
-        r"Provision CraneFwd- P$": "Provision Crane F- P",
+        r"Provision CraneA- P$": "Provision Crane A-P",
+        r"Provision CraneAft- P$": "Provision Crane A-P",
+        r"Provision CraneF- P$": "Provision Crane F-P",
+        r"Provision CraneF- S$": "Provision Crane F-S",
+        r"Provision CraneFwd- P$": "Provision Crane F-P"
     }
 
     original_value = str(value).strip()
