@@ -28,6 +28,8 @@ def get_vessel_name(df):
 
 def rename_machinery(value):
     """Apply renaming rules to machinery values."""
+   def rename_machinery(value):
+    """Apply renaming rules to machinery values."""
     rename_mapping = {
         r"P1$": " P", r"Port1$": " P", r"S1$": " S", r"Starboard1$": " S", 
         r"S2$": " S", r"Starboard2$": " S", r"F$": " F", r"Forward$": " F", 
@@ -36,6 +38,7 @@ def rename_machinery(value):
         r"A$": " A", r"Aft$": " A", r"P$": " P", r"Port$": " P", r"S$": " S",
         r"A1$": " A", r"Aft1$": " A", r"P1$": " P", r"Port1$": " P", r"S$": " S",
         r"A2$": " A", r"Aft2$": " A", r"P2$": " P", r"Port2$": " P", r"S$": " S",
+        r"Aft- P$": " A-P", r"A- P$": " A-P", r"F- P$": " F-P", r"Fwd- P$": " F-P", r"F- S$": " F-S",r"Fwd-Stbd$": " F-S",
         r"Starboard$": " S", r"Lifeboat DavitA$": " Lifeboat Davit A",
         r"Lifeboat DavitAft$": " Lifeboat Davit A", r"LifeboatA$": " Lifeboat A",
         r"LifeboatAft$": " Lifeboat A", r"Liferaft 6 PersonF$": " Liferaft 6 Person F",
