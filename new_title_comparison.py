@@ -26,40 +26,133 @@ def get_vessel_name(df):
             return vessel_values.iloc[0]
     return "Unknown Vessel"
 
+
 def rename_machinery(value):
-    """Apply renaming rules to machinery values."""
-    rename_mapping = {
-        r"^Provision CraneA- P$": "Provision Crane A-P",
-        r"^Provision CraneAft- P$": "Provision Crane A-P",
-        r"^Provision CraneF- P$": "Provision Crane F-P",
-        r"^Provision CraneF- S$": "Provision Crane F-S",
-        r"^Provision CraneFwd- P$": "Provision Crane F-P",
-        r"P1$": " P", r"Port1$": " P", r"S1$": " S", r"Starboard1$": " S", 
-        r"S2$": " S", r"Starboard2$": " S", r"F$": " F", r"Forward$": " F", 
-        r"F1$": " F", r"Forward1$": " F", r"F2$": " F", r"Forward2$": " F",
-        r"A$": " A", r"Aft$": " A", r"P$": " P", r"Port$": " P", r"S$": " S",
-        r"A1$": " A", r"Aft1$": " A", r"A2$": " A", r"Aft2$": " A", r"P2$": " P", r"Port2$": " P",
-        r"Aft- P$": " A-P", r"A- P$": " A-P", r"F- P$": " F-P", r"Fwd- P$": " F-P",
-        r"F- S$": " F-S", r"Fwd-Stbd$": " F-S", r"Starboard$": " S",
-        r"Lifeboat DavitA$": " Lifeboat Davit A", r"Lifeboat DavitAft$": " Lifeboat Davit A",
-        r"LifeboatA$": " Lifeboat A", r"LifeboatAft$": " Lifeboat A",
-        r"Liferaft 6 PersonF$": " Liferaft 6 Person F", r"Liferaft 6 PersonForward$": " Liferaft 6 Person F",
-        r"Liferaft Davit LaunchedP$": " Liferaft Davit Launched P", r"Liferaft Davit LaunchedPort$": " Liferaft Davit Launched P",
-        r"Liferaft Embarkation LadderF$": " Liferaft Embarkation Ladder F", r"Liferaft Embarkation LadderForward$": " Liferaft Embarkation Ladder F",
-        r"Liferaft Embarkation LadderP$": " Liferaft Embarkation Ladder P", r"Liferaft Embarkation LadderPort$": " Liferaft Embarkation Ladder P",
-        r"Liferaft Embarkation LadderS$": " Liferaft Embarkation Ladder S", r"Liferaft Embarkation LadderStarboard$": " Liferaft Embarkation Ladder S",
-        r"Liferaft/Rescue Boat DavitP$": " Liferaft/Rescue Boat Davit P", r"Liferaft/Rescue Boat DavitPort$": " Liferaft/Rescue Boat Davit P",
-        r"LiferaftS$": " Liferaft S", r"LiferaftStarboard$": " Liferaft S"
+    """Standardize machinery names by applying specific and generic patterns."""
+    original_value = str(value).strip()
+    original_value = re.sub(r"\s+", " ", original_value)  # normalize spaces
+    original_value = re.sub(r"–|—", "-", original_value)  # normalize dashes
 
+    # Priority 1: Specific edge-case replacements
+    specific_mapping = {
+        # Provision Cranes (existing + new)
+        r"^Provision CraneA-?P$": "Provision Crane A-P",
+        r"^Provision CraneAft-?Port$": "Provision Crane A-P",
+        r"^Provision CraneF-?P$": "Provision Crane F-P",
+        r"^Provision CraneF-?S$": "Provision Crane F-S",
+        r"^Provision CraneFwd-?P$": "Provision Crane F-P",
+        r"^Provision CraneFwd-?Port$": "Provision Crane F-P",
+        r"^Provision CraneFwd-?Stbd$": "Provision Crane F-S",
+        r"^Provision Crane F-S$": "Provision Crane F-S",
+        r"^Provision CraneP1$": "Provision Crane P1",
+        r"^Provision CranePort1$": "Provision Crane P1",
+        r"^Provision CraneS1$": "Provision Crane S1",
+        r"^Provision CraneStarboard1$": "Provision Crane S1",
 
+        # Liferaft/Rescue Davits
+        r"^Liferaft/Rescue Boat DavitS$": "Liferaft/Rescue Boat Davit S",
+        r"^Liferaft/Rescue Boat DavitStarboard$": "Liferaft/Rescue Boat Davit S",
 
+        # Rescue Boat
+        r"^Rescue BoatS$": "Rescue Boat S",
+        r"^Rescue BoatStarboard$": "Rescue Boat S",
+
+        # Chain Locker
+        r"^Chain LockerP1$": "Chain Locker P1",
+        r"^Chain LockerPort1$": "Chain Locker P1",
+        r"^Chain LockerS1$": "Chain Locker S1",
+        r"^Chain LockerStarboard1$": "Chain Locker S1",
+
+        # Combined Windlass Mooring Winch
+        r"^Combined Windlass Mooring WinchF1$": "Combined Windlass Mooring Winch F1",
+        r"^Combined Windlass Mooring WinchF2$": "Combined Windlass Mooring Winch F2",
+        r"^Combined Windlass Mooring WinchForward1$": "Combined Windlass Mooring Winch F1",
+        r"^Combined Windlass Mooring WinchForward2$": "Combined Windlass Mooring Winch F2",
+
+        # Mooring Winch
+        r"^Mooring WinchA1$": "Mooring Winch A1",
+        r"^Mooring WinchA2$": "Mooring Winch A2",
+        r"^Mooring WinchAft1$": "Mooring Winch A1",
+        r"^Mooring WinchAft2$": "Mooring Winch A2",
+
+        # Muster Station
+        r"^Muster StationA1$": "Muster Station A1",
+        r"^Muster StationAft1$": "Muster Station A1",
+
+        # Accommodation Ladder
+        r"^Accommodation LadderP1$": "Accommodation Ladder P1",
+        r"^Accommodation LadderPort1$": "Accommodation Ladder P1",
+        r"^Accommodation LadderS1$": "Accommodation Ladder S1",
+        r"^Accommodation LadderStarboard1$": "Accommodation Ladder S1",
+
+        # Anchor Chain Cable
+        r"^Anchor Chain CableP1$": "Anchor Chain Cable P1",
+        r"^Anchor Chain CablePort1$": "Anchor Chain Cable P1",
+        r"^Anchor Chain CableS1$": "Anchor Chain Cable S1",
+        r"^Anchor Chain CableStarboard1$": "Anchor Chain Cable S1",
+
+        # Anchor
+        r"^AnchorP1$": "Anchor P1",
+        r"^AnchorPort1$": "Anchor P1",
+        r"^AnchorS1$": "Anchor S1",
+        r"^AnchorStarboard1$": "Anchor S1",
+
+        # Pilot Combination Ladder
+        # Pilot Combination Ladder
+    r"^Pilot Combination LadderP1$": "Pilot Combination Ladder P1",
+    r"^Pilot Combination LadderPort1$": "Pilot Combination Ladder P1",
+    r"^Pilot Combination LadderS1$": "Pilot Combination Ladder S1",
+    r"^Pilot Combination LadderStarboard1$": "Pilot Combination Ladder S1",
+
+    # Bunker Davit
+    r"^Bunker DavitP1$": "Bunker Davit P1",
+    r"^Bunker DavitPort1$": "Bunker Davit P1",
+    r"^Bunker DavitS1$": "Bunker Davit S1",
+    r"^Bunker DavitStarboard1$": "Bunker Davit S1",
+
+    # Combined Windlass Mooring Winch
+    r"^Combined Windlass Mooring WinchP1$": "Combined Windlass Mooring Winch P1",
+    r"^Combined Windlass Mooring WinchPort1$": "Combined Windlass Mooring Winch P1",
+    r"^Combined Windlass Mooring WinchS1$": "Combined Windlass Mooring Winch S1",
+    r"^Combined Windlass Mooring WinchStarboard1$": "Combined Windlass Mooring Winch S1",
+
+    # Pilot Ladder Davit
+    r"^Pilot Ladder DavitP1$": "Pilot Ladder Davit P1",
+    r"^Pilot Ladder DavitPort1$": "Pilot Ladder Davit P1",
+    r"^Pilot Ladder DavitS2$": "Pilot Ladder Davit S1",
+    r"^Pilot Ladder DavitStarboard2$": "Pilot Ladder Davit S1",
+
+    # Seaway Equipment
+    r"^Seaway EquipmentP1$": "Seaway Equipment P1",
+    r"^Seaway EquipmentPort1$": "Seaway Equipment P1",
+    r"^Seaway EquipmentS1$": "Seaway Equipment S1",
+    r"^Seaway EquipmentStarboard1$": "Seaway Equipment S1",
+    }
+    
+    
+    for pattern, replacement in specific_mapping.items():
+        if re.match(pattern, original_value, flags=re.IGNORECASE):
+            return replacement
+
+    # Priority 2: Generic suffix replacements for standard machinery types
+    suffix_mapping = {
+        r"(.*)(?:Aft)$": r"\1A",
+        r"(.*)(?:Forward)$": r"\1F",
+        r"(.*)(?:Fwd)$": r"\1F",
+        r"(.*)(?:Port)$": r"\1P",
+        r"(.*)(?:Starboard)$": r"\1S",
+        r"(.*)(?:-P)$": r"\1P",
+        r"(.*)(?:-S)$": r"\1S",
+        r"(.*)(?:-Port)$": r"\1P",
+        r"(.*)(?:-Stbd)$": r"\1S",
     }
 
-    original_value = str(value).strip()
-    for pattern, replacement in rename_mapping.items():
-        if re.search(pattern, original_value):
-            return re.sub(pattern, replacement, original_value)
+    for pattern, replacement in suffix_mapping.items():
+        if re.match(pattern, original_value, flags=re.IGNORECASE):
+            return re.sub(pattern, replacement, original_value, flags=re.IGNORECASE).strip()
+
     return original_value
+
 
 
 def prepare_excel_report(df, file1_name, file2_name, vessel1_name, vessel2_name):
