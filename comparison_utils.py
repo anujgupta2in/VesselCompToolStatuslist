@@ -160,6 +160,45 @@ def rename_machinery(value):
     # Rescue Boat
     r"^Rescue BoatP1$": "Rescue Boat P1",
     r"^Rescue BoatPort1$": "Rescue Boat P1",
+
+    r"^Combined Mooring Winch Hydraulic UnitF1$": "Combined Mooring Winch Hydraulic Unit F1",
+    r"^Combined Mooring Winch Hydraulic UnitForward1$": "Combined Mooring Winch Hydraulic Unit F1",
+
+    # Emergency Towing System
+    r"^Emergency Towing SystemA1$": "Emergency Towing System A1",
+    r"^Emergency Towing SystemAft1$": "Emergency Towing System A1",
+    r"^Emergency Towing SystemF1$": "Emergency Towing System F1",
+    r"^Emergency Towing SystemForward1$": "Emergency Towing System F1",
+
+    # Liferaft 15
+    r"^Liferaft 15P1$": "Liferaft 15P1",
+    r"^Liferaft 15P2$": "Liferaft 15P2",
+    r"^Liferaft 15Port1$": "Liferaft 15P1",
+    r"^Liferaft 15Port2$": "Liferaft 15P2",
+
+    # Liferaft 6PF
+    r"^Liferaft 6PF-P1$": "Liferaft 6PF-P1",
+    r"^Liferaft 6PFwd-Port1$": "Liferaft 6PF-P1",
+
+    # Liferaft Embarkation Ladder F-*
+    r"^Liferaft Embarkation LadderF-P1$": "Liferaft Embarkation Ladder F-P1",
+    r"^Liferaft Embarkation LadderF-S1$": "Liferaft Embarkation Ladder F-S1",
+    r"^Liferaft Embarkation LadderFwd-Port1$": "Liferaft Embarkation Ladder F-P1",
+    r"^Liferaft Embarkation LadderFwd-Stbd1$": "Liferaft Embarkation Ladder F-S1",
+
+    # Mooring Winch Hydraulic Unit
+    r"^Mooring Winch Hydraulic UnitA1$": "Mooring Winch Hydraulic Unit A1",
+    r"^Mooring Winch Hydraulic UnitAft1$": "Mooring Winch Hydraulic Unit A1",
+
+    # Rescue Boat S
+    r"^Rescue BoatS1$": "Rescue Boat S1",
+    r"^Rescue BoatStarboard1$": "Rescue Boat S1",
+
+    # SART
+    r"^SARTP1$": "SART P1",
+    r"^SARTPort1$": "SART P1",
+    r"^SARTS1$": "SART S1",
+    r"^SARTStarboard1$": "SART S1",
     }
     
     for pattern, replacement in specific_mapping.items():
