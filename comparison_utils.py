@@ -243,6 +243,63 @@ def rename_machinery(value):
     # Mooring Winch Centre
     r"^Mooring WinchC1$": "Mooring Winch C1",
     r"^Mooring WinchCentre1$": "Mooring Winch C1",
+
+
+       # Hatch Cover Aft to A mapping
+    r"^Hatch CoverA1$": "Hatch Cover A1",
+    r"^Hatch CoverA2$": "Hatch Cover A2",
+    r"^Hatch CoverA3$": "Hatch Cover A3",
+    r"^Hatch CoverA4$": "Hatch Cover A4",
+    r"^Hatch CoverA5$": "Hatch Cover A5",
+    r"^Hatch CoverA6$": "Hatch Cover A6",
+    r"^Hatch CoverA7$": "Hatch Cover A7",
+    r"^Hatch CoverAft1$": "Hatch Cover A1",
+    r"^Hatch CoverAft2$": "Hatch Cover A2",
+    r"^Hatch CoverAft3$": "Hatch Cover A3",
+    r"^Hatch CoverAft4$": "Hatch Cover A4",
+    r"^Hatch CoverAft5$": "Hatch Cover A5",
+    r"^Hatch CoverAft6$": "Hatch Cover A6",
+    r"^Hatch CoverAft7$": "Hatch Cover A7",
+
+    # Hatch Cover Centre to C mapping
+    r"^Hatch CoverC1$": "Hatch Cover C1",
+    r"^Hatch CoverC2$": "Hatch Cover C2",
+    r"^Hatch CoverCentre1$": "Hatch Cover C1",
+    r"^Hatch CoverCentre2$": "Hatch Cover C2",
+
+    # Hatch Cover Forward to F mapping
+    r"^Hatch CoverF1$": "Hatch Cover F1",
+    r"^Hatch CoverF2$": "Hatch Cover F2",
+    r"^Hatch CoverF3$": "Hatch Cover F3",
+    r"^Hatch CoverF4$": "Hatch Cover F4",
+    r"^Hatch CoverF5$": "Hatch Cover F5",
+    r"^Hatch CoverF6$": "Hatch Cover F6",
+    r"^Hatch CoverF7$": "Hatch Cover F7",
+    r"^Hatch CoverForward1$": "Hatch Cover F1",
+    r"^Hatch CoverForward2$": "Hatch Cover F2",
+    r"^Hatch CoverForward3$": "Hatch Cover F3",
+    r"^Hatch CoverForward4$": "Hatch Cover F4",
+    r"^Hatch CoverForward5$": "Hatch Cover F5",
+    r"^Hatch CoverForward6$": "Hatch Cover F6",
+    r"^Hatch CoverForward7$": "Hatch Cover F7",
+
+  # Mooring Winch Centre to C mapping (corrected)
+    r"^Mooring WinchC2$": "Mooring Winch C2",
+    r"^Mooring WinchCentre2$": "Mooring Winch C2",
+
+    # Mooring Winch P variants
+    r"^Mooring WinchP1$": "Mooring Winch P1",
+    r"^Mooring WinchP2$": "Mooring Winch P2",
+    r"^Mooring WinchP3$": "Mooring Winch P3",
+    r"^Mooring WinchPort1$": "Mooring Winch P1",
+    r"^Mooring WinchPort2$": "Mooring Winch P2",
+    r"^Mooring WinchPort3$": "Mooring Winch P3",
+
+    # Mooring Winch S variants
+    r"^Mooring WinchS1$": "Mooring Winch S1",
+    r"^Mooring WinchS2$": "Mooring Winch S2",
+    r"^Mooring WinchStarboard1$": "Mooring Winch S1",
+    r"^Mooring WinchStarboard2$": "Mooring Winch S2",
     }
     
     for pattern, replacement in specific_mapping.items():
