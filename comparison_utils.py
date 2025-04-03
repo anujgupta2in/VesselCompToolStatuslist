@@ -199,6 +199,10 @@ def rename_machinery(value):
     r"^SARTPort1$": "SART P1",
     r"^SARTS1$": "SART S1",
     r"^SARTStarboard1$": "SART S1",
+
+        # Liferaft 15PPort
+    r"^Liferaft 15PPort1$": "Liferaft 15PP1",
+    r"^Liferaft 15PPort2$": "Liferaft 15PP2",    
     }
     
     for pattern, replacement in specific_mapping.items():
