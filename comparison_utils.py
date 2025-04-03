@@ -315,6 +315,10 @@ def rename_machinery(value):
     r"^Muster StationPort1$": "Muster Station P1",
     r"^Muster StationS1$": "Muster Station S1",
     r"^Muster StationStarboard1$": "Muster Station S1",
+
+        # Pilot Combination Ladder P2
+    r"^Pilot Combination LadderP2$": "Pilot Combination Ladder P2",
+    r"^Pilot Combination LadderPort2$": "Pilot Combination Ladder P2",
     }
     
     for pattern, replacement in specific_mapping.items():
