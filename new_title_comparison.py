@@ -211,7 +211,19 @@ def rename_machinery(value):
 
     # Liferaft 15PPort
     r"^Liferaft 15PPort1$": "Liferaft 15PP1",
-    r"^Liferaft 15PPort2$": "Liferaft 15PP2",    
+    r"^Liferaft 15PPort2$": "Liferaft 15PP2", 
+    # ICCP
+    r"^ICCPA1$": "ICCP A1",
+    r"^ICCPAft1$": "ICCP A1",
+    r"^ICCPF1$": "ICCP F1",
+    r"^ICCPForward1$": "ICCP F1",
+
+    # Slewing Fuel Hose Crane
+    r"^Slewing Fuel Hose CraneP1$": "Slewing Fuel Hose Crane P1",
+    r"^Slewing Fuel Hose CranePort1$": "Slewing Fuel Hose Crane P1",
+    r"^Slewing Fuel Hose CraneS1$": "Slewing Fuel Hose Crane S1",
+    r"^Slewing Fuel Hose CraneStarboard1$": "Slewing Fuel Hose Crane S1",
+    
     }
     
     
