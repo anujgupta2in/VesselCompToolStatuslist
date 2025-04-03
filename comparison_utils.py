@@ -88,8 +88,8 @@ def rename_machinery(value):
         r"^AnchorS1$": "Anchor S1",
         r"^AnchorStarboard1$": "Anchor S1",
 
-        # Pilot Combination Ladder
-        # Pilot Combination Ladder
+        
+           # Pilot Combination Ladder
     r"^Pilot Combination LadderP1$": "Pilot Combination Ladder P1",
     r"^Pilot Combination LadderPort1$": "Pilot Combination Ladder P1",
     r"^Pilot Combination LadderS1$": "Pilot Combination Ladder S1",
@@ -118,6 +118,48 @@ def rename_machinery(value):
     r"^Seaway EquipmentPort1$": "Seaway Equipment P1",
     r"^Seaway EquipmentS1$": "Seaway Equipment S1",
     r"^Seaway EquipmentStarboard1$": "Seaway Equipment S1",
+
+    # Lifeboat
+    r"^LifeboatA1$": "Lifeboat A1",
+    r"^LifeboatAft1$": "Lifeboat A1",
+
+    # Liferaft Embarkation Ladder
+    r"^Liferaft Embarkation LadderF1$": "Liferaft Embarkation Ladder F1",
+    r"^Liferaft Embarkation LadderForward1$": "Liferaft Embarkation Ladder F1",
+    r"^Liferaft Embarkation LadderP1$": "Liferaft Embarkation Ladder P1",
+    r"^Liferaft Embarkation LadderPort1$": "Liferaft Embarkation Ladder P1",
+    r"^Liferaft Embarkation LadderS1$": "Liferaft Embarkation Ladder S1",
+    r"^Liferaft Embarkation LadderStarboard1$": "Liferaft Embarkation Ladder S1",
+
+    # Liferaft
+    r"^LiferaftP1$": "Liferaft P1",
+    r"^LiferaftPort1$": "Liferaft P1",
+    r"^LiferaftP2$": "Liferaft P2",
+    r"^LiferaftPort2$": "Liferaft P2",
+    r"^LiferaftS1$": "Liferaft S1",
+    r"^LiferaftStarboard1$": "Liferaft S1",
+    r"^LiferaftS2$": "Liferaft S2",
+    r"^LiferaftStarboard2$": "Liferaft S2",
+
+    # Mooring Winch
+    r"^Mooring WinchA3$": "Mooring Winch A3",
+    r"^Mooring WinchAft3$": "Mooring Winch A3",
+    r"^Mooring WinchA4$": "Mooring Winch A4",
+    r"^Mooring WinchAft4$": "Mooring Winch A4",
+    r"^Mooring WinchF1$": "Mooring Winch F1",
+    r"^Mooring WinchForward1$": "Mooring Winch F1",
+    r"^Mooring WinchF2$": "Mooring Winch F2",
+    r"^Mooring WinchForward2$": "Mooring Winch F2",
+
+    # Pilot Ladder
+    r"^Pilot LadderP1$": "Pilot Ladder P1",
+    r"^Pilot LadderPort1$": "Pilot Ladder P1",
+    r"^Pilot LadderS1$": "Pilot Ladder S1",
+    r"^Pilot LadderStarboard1$": "Pilot Ladder S1",
+
+    # Rescue Boat
+    r"^Rescue BoatP1$": "Rescue Boat P1",
+    r"^Rescue BoatPort1$": "Rescue Boat P1",
     }
     
     for pattern, replacement in specific_mapping.items():
