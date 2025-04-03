@@ -214,7 +214,35 @@ def rename_machinery(value):
     r"^Slewing Fuel Hose CraneP1$": "Slewing Fuel Hose Crane P1",
     r"^Slewing Fuel Hose CranePort1$": "Slewing Fuel Hose Crane P1",
     r"^Slewing Fuel Hose CraneS1$": "Slewing Fuel Hose Crane S1",
-    r"^Slewing Fuel Hose CraneStarboard1$": "Slewing Fuel Hose Crane S1",   
+    r"^Slewing Fuel Hose CraneStarboard1$": "Slewing Fuel Hose Crane S1",
+
+     # Combined Windlass Mooring Winch F-*
+    r"^Combined Windlass Mooring WinchF-P1$": "Combined Windlass Mooring Winch F-P1",
+    r"^Combined Windlass Mooring WinchF-S1$": "Combined Windlass Mooring Winch F-S1",
+    r"^Combined Windlass Mooring WinchFwd-Port1$": "Combined Windlass Mooring Winch F-P1",
+    r"^Combined Windlass Mooring WinchFwd-Stbd1$": "Combined Windlass Mooring Winch F-S1",
+
+    # Lifeboat Davit
+    r"^Lifeboat DavitP1$": "Lifeboat Davit P1",
+    r"^Lifeboat DavitPort1$": "Lifeboat Davit P1",
+
+    # Lifeboat
+    r"^LifeboatP1$": "Lifeboat P1",
+    r"^LifeboatPort1$": "Lifeboat P1",
+
+    # Liferaft Embarkation Ladder P2/S2
+    r"^Liferaft Embarkation LadderP2$": "Liferaft Embarkation Ladder P2",
+    r"^Liferaft Embarkation LadderPort2$": "Liferaft Embarkation Ladder P2",
+    r"^Liferaft Embarkation LadderS2$": "Liferaft Embarkation Ladder S2",
+    r"^Liferaft Embarkation LadderStarboard2$": "Liferaft Embarkation Ladder S2",
+
+    # Liferaft/Rescue Boat Davit
+    r"^Liferaft/Rescue Boat DavitS1$": "Liferaft/Rescue Boat Davit S1",
+    r"^Liferaft/Rescue Boat DavitStarboard1$": "Liferaft/Rescue Boat Davit S1",
+
+    # Mooring Winch Centre
+    r"^Mooring WinchC1$": "Mooring Winch C1",
+    r"^Mooring WinchCentre1$": "Mooring Winch C1",
     }
     
     for pattern, replacement in specific_mapping.items():
