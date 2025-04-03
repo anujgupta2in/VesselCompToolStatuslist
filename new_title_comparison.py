@@ -307,6 +307,20 @@ def rename_machinery(value):
     r"^Mooring WinchS2$": "Mooring Winch S2",
     r"^Mooring WinchStarboard1$": "Mooring Winch S1",
     r"^Mooring WinchStarboard2$": "Mooring Winch S2",
+
+    # Lifeboat/Rescue Boat
+    r"^Lifeboat/Rescue BoatS1$": "Lifeboat/Rescue Boat S1",
+    r"^Lifeboat/Rescue BoatStarboard1$": "Lifeboat/Rescue Boat S1",
+
+    # Liferaft F1 / Forward1
+    r"^LiferaftF1$": "Liferaft F1",
+    r"^LiferaftForward1$": "Liferaft F1",
+
+    # Muster Station
+    r"^Muster StationP1$": "Muster Station P1",
+    r"^Muster StationPort1$": "Muster Station P1",
+    r"^Muster StationS1$": "Muster Station S1",
+    r"^Muster StationStarboard1$": "Muster Station S1",
     
     }
     
