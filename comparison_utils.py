@@ -405,6 +405,13 @@ def rename_machinery(value):
     r"^Mooring WinchFwd-Port1$": "Mooring Winch F-P1",
     r"^Mooring WinchFwd-Stbd1$": "Mooring Winch F-S1",
 
+
+        # Liferaft FP / FS
+    r"^LiferaftFP$": "Liferaft FP",
+    r"^LiferaftFS$": "Liferaft FS",
+    r"^LiferaftFwd-P$": "Liferaft FP",
+    r"^LiferaftFwdS$": "Liferaft FS",
+
     }
     
     for pattern, replacement in specific_mapping.items():
