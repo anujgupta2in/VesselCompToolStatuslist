@@ -319,6 +319,14 @@ def rename_machinery(value):
         # Pilot Combination Ladder P2
     r"^Pilot Combination LadderP2$": "Pilot Combination Ladder P2",
     r"^Pilot Combination LadderPort2$": "Pilot Combination Ladder P2",
+
+  
+    # Liferaft Forward Port/Starboard
+    r"^LiferaftFP$": "Liferaft FP",
+    r"^LiferaftFS$": "Liferaft FS",
+    r"^LiferaftFwd-P$": "Liferaft FP",
+    r"^LiferaftFwdS$": "Liferaft FS",
+
     }
     
     for pattern, replacement in specific_mapping.items():
