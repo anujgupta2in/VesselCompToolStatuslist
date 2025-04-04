@@ -333,7 +333,6 @@ def rename_machinery(value):
     r"^LiferaftFwd-P$": "Liferaft FP",
     r"^LiferaftFwdS$": "Liferaft FS",
 
-
     
     }
     
