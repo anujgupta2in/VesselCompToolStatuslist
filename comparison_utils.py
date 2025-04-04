@@ -385,6 +385,26 @@ def rename_machinery(value):
     r"^Liferaft Embarkation LadderS3$": "Liferaft Embarkation Ladder S3",
     r"^Liferaft Embarkation LadderStarboard3$": "Liferaft Embarkation Ladder S3",
 
+        # Liferaft 6 Person F1
+    r"^Liferaft 6 PersonF1$": "Liferaft 6 Person F1",
+    r"^Liferaft 6 PersonForward1$": "Liferaft 6 Person F1",
+
+    # Mooring Winch Aft combinations
+    r"^Mooring WinchA-P1$": "Mooring Winch A-P1",
+    r"^Mooring WinchA-P2$": "Mooring Winch A-P2",
+    r"^Mooring WinchA-S1$": "Mooring Winch A-S1",
+    r"^Mooring WinchA-S2$": "Mooring Winch A-S2",
+    r"^Mooring WinchAft-Port1$": "Mooring Winch A-P1",
+    r"^Mooring WinchAft-Port2$": "Mooring Winch A-P2",
+    r"^Mooring WinchAft-Stbd1$": "Mooring Winch A-S1",
+    r"^Mooring WinchAft-Stbd2$": "Mooring Winch A-S2",
+
+    # Mooring Winch Forward combinations
+    r"^Mooring WinchF-P1$": "Mooring Winch F-P1",
+    r"^Mooring WinchF-S1$": "Mooring Winch F-S1",
+    r"^Mooring WinchFwd-Port1$": "Mooring Winch F-P1",
+    r"^Mooring WinchFwd-Stbd1$": "Mooring Winch F-S1",
+
     }
     
     for pattern, replacement in specific_mapping.items():
