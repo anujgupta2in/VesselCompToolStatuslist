@@ -327,6 +327,50 @@ def rename_machinery(value):
     r"^LiferaftFwd-P$": "Liferaft FP",
     r"^LiferaftFwdS$": "Liferaft FS",
 
+    # Lifeboat Davit
+    r"^Lifeboat DavitS1$": "Lifeboat Davit S1",
+    r"^Lifeboat DavitStarboard1$": "Lifeboat Davit S1",
+
+    # Lifeboat/Rescue Boat
+    r"^Lifeboat/Rescue BoatP1$": "Lifeboat/Rescue Boat P1",
+    r"^Lifeboat/Rescue BoatPort1$": "Lifeboat/Rescue Boat P1",
+
+    # Lifeboat
+    r"^LifeboatS1$": "Lifeboat S1",
+    r"^LifeboatStarboard1$": "Lifeboat S1",
+
+    # Liferaft 16 Person
+    r"^Liferaft 16 PersonP1$": "Liferaft 16 Person P1",
+    r"^Liferaft 16 PersonP2$": "Liferaft 16 Person P2",
+    r"^Liferaft 16 PersonPort1$": "Liferaft 16 Person P1",
+    r"^Liferaft 16 PersonPort2$": "Liferaft 16 Person P2",
+    r"^Liferaft 16 PersonS1$": "Liferaft 16 Person S1",
+    r"^Liferaft 16 PersonS2$": "Liferaft 16 Person S2",
+    r"^Liferaft 16 PersonStarboard1$": "Liferaft 16 Person S1",
+    r"^Liferaft 16 PersonStarboard2$": "Liferaft 16 Person S2",
+
+    # Liferaft 6 Person
+    r"^Liferaft 6 PersonF-P1$": "Liferaft 6 Person F-P1",
+    r"^Liferaft 6 PersonFwd-Port1$": "Liferaft 6 Person F-P1",
+
+    # Liferaft/Rescue Boat Davit
+    r"^Liferaft/Rescue Boat DavitP1$": "Liferaft/Rescue Boat Davit P1",
+    r"^Liferaft/Rescue Boat DavitPort1$": "Liferaft/Rescue Boat Davit P1",
+
+    # Mooring Winch M
+    r"^Mooring WinchM1$": "Mooring Winch M1",
+    r"^Mooring WinchM2$": "Mooring Winch M2",
+    r"^Mooring WinchM3$": "Mooring Winch M3",
+    r"^Mooring WinchM4$": "Mooring Winch M4",
+    r"^Mooring WinchM5$": "Mooring Winch M5",
+    r"^Mooring WinchM6$": "Mooring Winch M6",
+    r"^Mooring WinchMiddle1$": "Mooring Winch M1",
+    r"^Mooring WinchMiddle2$": "Mooring Winch M2",
+    r"^Mooring WinchMiddle3$": "Mooring Winch M3",
+    r"^Mooring WinchMiddle4$": "Mooring Winch M4",
+    r"^Mooring WinchMiddle5$": "Mooring Winch M5",
+    r"^Mooring WinchMiddle6$": "Mooring Winch M6",
+
     }
     
     for pattern, replacement in specific_mapping.items():
