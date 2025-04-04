@@ -456,6 +456,18 @@ def rename_machinery(value):
     r"^Mooring Winch Hydraulic UnitA2$": "Mooring Winch Hydraulic Unit A2",
     r"^Mooring Winch Hydraulic UnitAft2$": "Mooring Winch Hydraulic Unit A2",
 
+        # Combined Windlass Mooring Winch FP / FS
+    r"^Combined Windlass Mooring WinchFP$": "Combined Windlass Mooring Winch FP",
+    r"^Combined Windlass Mooring WinchFS$": "Combined Windlass Mooring Winch FS",
+    r"^Combined Windlass Mooring WinchFwd-P$": "Combined Windlass Mooring Winch FP",
+    r"^Combined Windlass Mooring WinchFwdS$": "Combined Windlass Mooring Winch FS",
+
+    # Mooring Winch Aft/Side variants
+    r"^Mooring WinchA-P3$": "Mooring Winch A-P3",
+    r"^Mooring WinchA-S4$": "Mooring Winch A-S3",
+    r"^Mooring WinchAft-Port3$": "Mooring Winch A-P3",
+    r"^Mooring WinchAft-Stbd4$": "Mooring Winch A-S3",
+
     }
     
     for pattern, replacement in specific_mapping.items():
