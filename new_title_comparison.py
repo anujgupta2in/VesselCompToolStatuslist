@@ -461,6 +461,14 @@ def rename_machinery(value):
     r"^LiferaftFwd-P$": "Liferaft FP",
     r"^LiferaftFwdS$": "Liferaft FS",
 
+        # Combined Mooring Winch Hydraulic Unit F2
+    r"^Combined Mooring Winch Hydraulic UnitF2$": "Combined Mooring Winch Hydraulic Unit F2",
+    r"^Combined Mooring Winch Hydraulic UnitForward2$": "Combined Mooring Winch Hydraulic Unit F2",
+
+    # Mooring Winch Hydraulic Unit A2
+    r"^Mooring Winch Hydraulic UnitA2$": "Mooring Winch Hydraulic Unit A2",
+    r"^Mooring Winch Hydraulic UnitAft2$": "Mooring Winch Hydraulic Unit A2",
+
     
     }
     
