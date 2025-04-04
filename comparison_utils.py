@@ -438,6 +438,12 @@ def rename_machinery(value):
     r"^Provision Crane StbdS1$": "Provision Crane S1",
     r"^Provision Crane StbdStarboard1$": "Provision Crane S1",
 
+        # Liferaft FP / FS variants
+    r"^LiferaftFP$": "Liferaft FP",
+    r"^LiferaftFS$": "Liferaft FS",
+    r"^LiferaftFwd-P$": "Liferaft FP",
+    r"^LiferaftFwdS$": "Liferaft FS",
+
     }
     
     for pattern, replacement in specific_mapping.items():
