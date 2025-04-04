@@ -438,7 +438,11 @@ def rename_machinery(value):
     r"^Provision Crane StbdS1$": "Provision Crane S1",
     r"^Provision Crane StbdStarboard1$": "Provision Crane S1",
 
-        # Liferaft FP / FS variants
+            # Liferaft Embarkation Ladder FS
+    r"^Liferaft Embarkation LadderFS$": "Liferaft Embarkation Ladder FS",
+    r"^Liferaft Embarkation LadderFwdS$": "Liferaft Embarkation Ladder FS",
+
+    # Liferaft FP / FS
     r"^LiferaftFP$": "Liferaft FP",
     r"^LiferaftFS$": "Liferaft FS",
     r"^LiferaftFwd-P$": "Liferaft FP",
