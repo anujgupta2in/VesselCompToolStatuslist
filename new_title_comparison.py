@@ -482,6 +482,12 @@ def rename_machinery(value):
     r"^Mooring WinchAft-Port3$": "Mooring Winch A-P3",
     r"^Mooring WinchAft-Stbd4$": "Mooring Winch A-S3",
 
+        # Liferaft 15 Person S1/S2
+    r"^Liferaft 15 PersonS1$": "Liferaft 15 Person S1",
+    r"^Liferaft 15 PersonS2$": "Liferaft 15 Person S2",
+    r"^Liferaft 15 PersonStarboard1$": "Liferaft 15 Person S1",
+    r"^Liferaft 15 PersonStarboard2$": "Liferaft 15 Person S2",
+
     
     }
     
