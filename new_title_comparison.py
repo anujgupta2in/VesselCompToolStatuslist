@@ -381,6 +381,17 @@ def rename_machinery(value):
     r"^Liferaft/Rescue Boat DavitS2$": "Liferaft/Rescue Boat Davit S2",
     r"^Liferaft/Rescue Boat DavitStarboard2$": "Liferaft/Rescue Boat Davit S2",
 
+
+        # Lifeboat/Rescue Boat Davit S1
+    r"^Lifeboat/Rescue Boat DavitS1$": "Lifeboat/Rescue Boat Davit S1",
+    r"^Lifeboat/Rescue Boat DavitStarboard1$": "Lifeboat/Rescue Boat Davit S1",
+
+    # Liferaft Embarkation Ladder P3/S3
+    r"^Liferaft Embarkation LadderP3$": "Liferaft Embarkation Ladder P3",
+    r"^Liferaft Embarkation LadderPort3$": "Liferaft Embarkation Ladder P3",
+    r"^Liferaft Embarkation LadderS3$": "Liferaft Embarkation Ladder S3",
+    r"^Liferaft Embarkation LadderStarboard3$": "Liferaft Embarkation Ladder S3",
+
     
     }
     
