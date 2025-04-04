@@ -28,10 +28,11 @@ def get_vessel_name(df):
 
 
 def rename_machinery(value):
-    """Standardize machinery names by applying specific and generic patterns."""
+     # Step 1: Convert to string and normalize whitespace & dashes
     original_value = str(value).strip()
-    original_value = re.sub(r"\s+", " ", original_value)  # normalize spaces
-    original_value = re.sub(r"–|—", "-", original_value)  # normalize dashes
+    original_value = re.sub(r"\s+", " ", original_value)         # normalize multiple spaces
+    original_value = re.sub(r"[–—]", "-", original_value)        # normalize all dash types to hyphen
+    compact_value = re.sub(r"\s+", "", original_value)  
 
     # Priority 1: Specific edge-case replacements
     specific_mapping = {
