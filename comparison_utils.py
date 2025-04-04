@@ -412,6 +412,32 @@ def rename_machinery(value):
     r"^LiferaftFwd-P$": "Liferaft FP",
     r"^LiferaftFwdS$": "Liferaft FS",
 
+    # Combined Mooring Winch Hydraulic Unit
+    r"^Combined Mooring Winch Hydraulic UnitA1$": "Combined Mooring Winch Hydraulic Unit A1",
+    r"^Combined Mooring Winch Hydraulic UnitAft1$": "Combined Mooring Winch Hydraulic Unit A1",
+
+    # Emergency Towing System F2
+    r"^Emergency Towing SystemF2$": "Emergency Towing System F2",
+    r"^Emergency Towing SystemForward2$": "Emergency Towing System F2",
+
+    # Liferaft 20 Person
+    r"^Liferaft 20 PersonP1$": "Liferaft 20 Person P1",
+    r"^Liferaft 20 PersonP2$": "Liferaft 20 Person P2",
+    r"^Liferaft 20 PersonPort1$": "Liferaft 20 Person P1",
+    r"^Liferaft 20 PersonPort2$": "Liferaft 20 Person P2",
+    r"^Liferaft 20 PersonS1$": "Liferaft 20 Person S1",
+    r"^Liferaft 20 PersonS2$": "Liferaft 20 Person S2",
+    r"^Liferaft 20 PersonStarboard1$": "Liferaft 20 Person S1",
+    r"^Liferaft 20 PersonStarboard2$": "Liferaft 20 Person S2",
+
+    # Mooring Winch Hydraulic Unit Forward
+    r"^Mooring Winch Hydraulic UnitF1$": "Mooring Winch Hydraulic Unit F1",
+    r"^Mooring Winch Hydraulic UnitForward1$": "Mooring Winch Hydraulic Unit F1",
+
+    # Provision Crane Starboard
+    r"^Provision Crane StbdS1$": "Provision Crane S1",
+    r"^Provision Crane StbdStarboard1$": "Provision Crane S1",
+
     }
     
     for pattern, replacement in specific_mapping.items():
