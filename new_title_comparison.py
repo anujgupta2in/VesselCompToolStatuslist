@@ -506,6 +506,16 @@ def rename_machinery(value):
     r"^Suez Search Light DavitF1$": "Suez Search Light Davit F1",
     r"^Suez Search Light DavitForward1$": "Suez Search Light Davit F1",
 
+        # Liferaft 15 Person P1/P2
+    r"^Liferaft 15 PersonP1$": "Liferaft 15 Person P1",
+    r"^Liferaft 15 PersonP2$": "Liferaft 15 Person P2",
+    r"^Liferaft 15 PersonPort1$": "Liferaft 15 Person P1",
+    r"^Liferaft 15 PersonPort2$": "Liferaft 15 Person P2",
+
+    # Liferaft 6 Person C1
+    r"^Liferaft 6 PersonC1$": "Liferaft 6 Person C1",
+    r"^Liferaft 6 PersonCentre1$": "Liferaft 6 Person C1",
+
     
     }
     
