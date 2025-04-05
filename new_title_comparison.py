@@ -516,6 +516,11 @@ def rename_machinery(value):
     r"^Liferaft 6 PersonC1$": "Liferaft 6 Person C1",
     r"^Liferaft 6 PersonCentre1$": "Liferaft 6 Person C1",
 
+    # Lifeboat Davit with dot notation
+    r"^Lifeboat Davit\.S1$": "Lifeboat Davit S",
+    r"^Lifeboat Davit\.Starboard1$": "Lifeboat Davit S",
+
+
     
     }
     
