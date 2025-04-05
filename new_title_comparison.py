@@ -488,6 +488,24 @@ def rename_machinery(value):
     r"^Liferaft 15 PersonStarboard1$": "Liferaft 15 Person S1",
     r"^Liferaft 15 PersonStarboard2$": "Liferaft 15 Person S2",
 
+        # Bilge Well
+    r"^Bilge WellC1$": "Bilge Well C1",
+    r"^Bilge WellCentre1$": "Bilge Well C1",
+    r"^Bilge WellP1$": "Bilge Well P1",
+    r"^Bilge WellPort1$": "Bilge Well P1",
+    r"^Bilge WellS1$": "Bilge Well S1",
+    r"^Bilge WellStarboard1$": "Bilge Well S1",
+
+    # Chain Locker
+    r"^Chain LockerC1$": "Chain Locker C1",
+    r"^Chain LockerC2$": "Chain Locker C2",
+    r"^Chain LockerCentre1$": "Chain Locker C1",
+    r"^Chain LockerCentre2$": "Chain Locker C2",
+
+    # Suez Search Light Davit
+    r"^Suez Search Light DavitF1$": "Suez Search Light Davit F1",
+    r"^Suez Search Light DavitForward1$": "Suez Search Light Davit F1",
+
     
     }
     
