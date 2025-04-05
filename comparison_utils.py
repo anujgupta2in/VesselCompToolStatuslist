@@ -674,4 +674,3 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
 
     return comparison_df, output_final.getvalue()
 
-

@@ -6,6 +6,7 @@ import os
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment
 
+
 def extract_date_from_filename(filename):
     """Extract and format date from filename."""
     base_name = os.path.splitext(os.path.basename(filename))[0]
@@ -550,133 +551,104 @@ def rename_machinery(value):
 
 
 
+
+def count_titles(column):
+    if column == '-' or pd.isna(column):
+        return 0
+    return len([x for x in column.split(', ') if x.strip()])
+
+def add_count_columns(df):
+    df['Common Count'] = df['Common Titles'].apply(count_titles)
+    title_cols = [col for col in df.columns if 'Titles only in' in col]
+    if len(title_cols) >= 2:
+        df['Only in File 1 Count'] = df[title_cols[0]].apply(count_titles)
+        df['Only in File 2 Count'] = df[title_cols[1]].apply(count_titles)
+    else:
+        df['Only in File 1 Count'] = 0
+        df['Only in File 2 Count'] = 0
+    return df
+
 def prepare_excel_report(df, file1_name, file2_name, vessel1_name, vessel2_name):
-    """Create a formatted Excel report based on the comparison results."""
-    
-    # Create a new workbook
     wb = Workbook()
     ws = wb.active
     ws.title = "Job Title Comparison"
-    
+
     if not df.empty:
-        # Write header for main comparison sheet
-        headers = df.columns.tolist()
+        headers = [
+            'Machinery', 'Has Differences', 'Common Titles',
+            'Titles only in Job List', 'Titles only is Job Status',
+            'Count for Common Titles', 'Count for Job List Titles', 'Count for Job Status Titles'
+        ]
         for col_idx, header in enumerate(headers, 1):
             ws.cell(row=1, column=col_idx, value=header)
-        
-        # Write data for main comparison sheet
+
         for row_idx, row_data in enumerate(df.values, 2):
-            for col_idx, value in enumerate(row_data, 1):
+            row_vals = list(row_data)
+            row_vals += [count_titles(row_data[2]), count_titles(row_data[3]), count_titles(row_data[4])]
+            for col_idx, value in enumerate(row_vals, 1):
                 ws.cell(row=row_idx, column=col_idx, value=value)
-    
-    # Define styles
-    fill_yellow = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")  # Light yellow
-    fill_red = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")  # Light red
-    fill_light_blue = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")  # Light blue
+
+    fill_yellow = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+    fill_red = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    fill_light_blue = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
     bold_font = Font(bold=True)
-    red_font = Font(color="9C0006")  # Dark red
-    
-    # Apply styling to main comparison sheet
+    red_font = Font(color="9C0006")
+
     if not df.empty:
-        # Format headers
-        for col in range(1, len(df.columns) + 1):
+        for col in range(1, len(df.columns) + 4):
             ws.cell(row=1, column=col).font = bold_font
-        
-        # Format data rows
+
         for row in range(2, len(df) + 2):
-            # Get the "Has Differences" value - safely handle missing columns
-            has_diff_col = None
-            for i, col_name in enumerate(df.columns):
-                if col_name == 'Has Differences':
-                    has_diff_col = i
-                    break
-            
-            # Only proceed if we found the column
-            if has_diff_col is not None:
-                has_diff = ws.cell(row=row, column=has_diff_col + 1).value
-                
-                if has_diff == 'Yes':
-                    # Highlight machinery name
-                    ws.cell(row=row, column=1).font = bold_font
-                    
-                    # Find title columns
-                    for col in range(1, len(df.columns) + 1):
-                        header = ws.cell(row=1, column=col).value
-                        if 'Titles only in' in header:
-                            cell = ws.cell(row=row, column=col)
-                            if cell.value != '-':
-                                cell.fill = fill_yellow
-                    
-                    # Highlight "Has Differences" column
-                    ws.cell(row=row, column=has_diff_col + 1).font = red_font
-                    ws.cell(row=row, column=has_diff_col + 1).fill = fill_red
-        
-        # Adjust column widths and set text wrapping
-        for col in range(1, len(df.columns) + 1):
-            col_letter = chr(64 + col)  # Convert column number to letter (A, B, C, ...)
+            has_diff = ws.cell(row=row, column=2).value
+            if has_diff == 'Yes':
+                ws.cell(row=row, column=1).font = bold_font
+                for col in range(1, len(df.columns) + 1):
+                    header = ws.cell(row=1, column=col).value
+                    if 'Titles only in' in header:
+                        cell = ws.cell(row=row, column=col)
+                        if cell.value != '-':
+                            cell.fill = fill_yellow
+                ws.cell(row=row, column=2).font = red_font
+                ws.cell(row=row, column=2).fill = fill_red
+
+        for col in range(1, len(df.columns) + 4):
+            col_letter = chr(64 + (col if col <= 26 else (col - 1)//26 + 64))
             ws.column_dimensions[col_letter].width = 30
-            
-            # Set text wrapping for all cells
             for row in range(2, len(df) + 2):
-                cell = ws.cell(row=row, column=col)
-                cell.alignment = Alignment(wrap_text=True, vertical='top')
-    
-    # Add a separate sheet for just the list of machinery with differences
+                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical='top')
+
     machinery_diff_sheet = wb.create_sheet(title="Machinery Differences")
-    
-    # Check if we have any machinery with differences
-    diff_machinery = []
-    if not df.empty:
-        diff_machinery = df[df['Has Differences'] == 'Yes']['Machinery'].tolist()
-    
-    # Add a header row for the machinery differences sheet
+    diff_machinery = df[df['Has Differences'] == 'Yes']['Machinery'].tolist() if not df.empty else []
+
     machinery_diff_sheet.cell(row=1, column=1, value="Machinery with Different Job Titles")
     machinery_diff_sheet.cell(row=1, column=2, value=f"Comparison: {vessel1_name} vs {vessel2_name}")
     machinery_diff_sheet.cell(row=1, column=1).font = bold_font
     machinery_diff_sheet.cell(row=1, column=2).font = bold_font
-    
-    # Add a subheader row
+
     machinery_diff_sheet.cell(row=3, column=1, value="No.")
     machinery_diff_sheet.cell(row=3, column=2, value="Machinery")
     machinery_diff_sheet.cell(row=3, column=1).font = bold_font
     machinery_diff_sheet.cell(row=3, column=2).font = bold_font
-    
-    # Add the machinery names to the sheet
+
     for idx, machinery in enumerate(sorted(diff_machinery), 1):
         machinery_diff_sheet.cell(row=idx+3, column=1, value=idx)
         machinery_diff_sheet.cell(row=idx+3, column=2, value=machinery)
-        # Apply alternating row coloring for better readability
         if idx % 2 == 0:
             machinery_diff_sheet.cell(row=idx+3, column=1).fill = fill_light_blue
             machinery_diff_sheet.cell(row=idx+3, column=2).fill = fill_light_blue
-    
-    # Make the second column wider
+
     machinery_diff_sheet.column_dimensions['B'].width = 50
-    
-    # If no machinery with differences found, add a note
+
     if not diff_machinery:
         machinery_diff_sheet.cell(row=4, column=1, value="No machinery with different job titles found")
         machinery_diff_sheet.cell(row=4, column=1).font = Font(italic=True)
-    
-    # Make sure at least one sheet is visible
-    if len(wb.sheetnames) > 0:
-        # Set all sheets to visible state
-        for sheet_name in wb.sheetnames:
-            wb[sheet_name].sheet_state = 'visible'
-    else:
-        # Create a blank sheet if none exists
-        ws = wb.create_sheet("No Differences")
-        ws.append(["No job title differences found between the two files"])
-    
-    # Save the styled workbook with error handling
+
     try:
         output_final = BytesIO()
         wb.save(output_final)
         output_final.seek(0)
         return output_final.getvalue()
     except Exception as e:
-        print(f"Error saving Excel file: {str(e)}")
-        # Return a simple Excel file with error message
         wb_error = Workbook()
         ws_error = wb_error.active
         ws_error.title = "Error"
