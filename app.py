@@ -6,12 +6,12 @@ import io
 
 # Set page config
 st.set_page_config(
-    page_title="Machinery Jobs Comparison",
+    page_title="Job List and Job Status Page Comparison",
     page_icon="🚢",
     layout="wide"
 )
 
-st.title("🚢 Machinery Jobs Comparison Tool")
+st.title("🚢 Job List and Job Status Page Tool")
 
 st.markdown("""
 This tool compares machinery jobs between two CSV files:
