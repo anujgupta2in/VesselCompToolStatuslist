@@ -201,13 +201,15 @@ with tab2:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-        st.info("""
-        **Legend:**
-        - **Red highlighting**: Machinery that only exists in one file
-        - **Yellow highlighting**: Different job counts between files
-        - **Green (positive difference)**: More jobs in first file
-        - **Red (negative difference)**: More jobs in second file
-        """)
+        st.markdown("""
+<div style="border:1px solid #ddd; border-radius:6px; padding:12px 16px; background:#fafafa; margin-top:8px;">
+<strong>Legend</strong><br><br>
+<span style="display:inline-block;width:18px;height:18px;background:#FFC7CE;border:1px solid #ccc;vertical-align:middle;margin-right:6px;"></span> Machinery that only exists in one file<br><br>
+<span style="display:inline-block;width:18px;height:18px;background:#FFEB9C;border:1px solid #ccc;vertical-align:middle;margin-right:6px;"></span> Different job counts between files<br><br>
+<span style="display:inline-block;width:18px;height:18px;background:#C6EFCE;border:1px solid #ccc;vertical-align:middle;margin-right:6px;"></span> Difference is positive — more jobs in first file<br><br>
+<span style="display:inline-block;width:18px;height:18px;background:#FFC7CE;border:1px solid #ccc;vertical-align:middle;margin-right:6px;"></span> Difference is negative — more jobs in second file
+</div>
+""", unsafe_allow_html=True)
 
         # --- Job Title & Code breakdown for machinery with differences ---
         if job_detail:
@@ -229,43 +231,55 @@ with tab2:
                 label1 = job_detail.get('col1', 'File 1')
                 label2 = job_detail.get('col2', 'File 2')
 
+                st.markdown("""
+<div style="border:1px solid #ddd;border-radius:6px;padding:10px 14px;background:#fafafa;margin-bottom:10px;font-size:0.9em;">
+<strong>Breakdown Legend</strong>&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#FFD180;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Only in left file&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#BBDEFB;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Only in right file&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#FFF3CD;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Duplicate Job Code
+</div>
+""", unsafe_allow_html=True)
+
                 for machinery in diff_rows:
                     with st.expander(f"📋 {machinery}", expanded=False):
                         c1, c2 = st.columns(2)
 
-                        def render_detail_table(detail_dict, machinery_name, label):
-                            df_detail = detail_dict.get(machinery_name, pd.DataFrame(
-                                columns=['Job Code', 'Job Title', 'Count']
-                            ))
+                        df1_m = detail1.get(machinery, pd.DataFrame(
+                            columns=['Job Code', 'Job Title', 'Count']))
+                        df2_m = detail2.get(machinery, pd.DataFrame(
+                            columns=['Job Code', 'Job Title', 'Count']))
+
+                        codes1 = set(df1_m['Job Code'].astype(str).str.strip()) if not df1_m.empty else set()
+                        codes2 = set(df2_m['Job Code'].astype(str).str.strip()) if not df2_m.empty else set()
+                        only_in_1 = codes1 - codes2
+                        only_in_2 = codes2 - codes1
+
+                        def render_detail_table(df_detail, label, exclusive_codes, exclusive_color):
                             if df_detail.empty:
                                 st.write(f"**{label}**")
                                 st.info("No jobs found in this file.")
                                 return
-
                             st.write(f"**{label}** — {int(df_detail['Count'].sum())} job(s)")
 
-                            # Highlight rows where Job Code appears more than once
-                            dup_codes = set(
-                                df_detail.loc[df_detail['Count'] > 1, 'Job Code'].tolist()
-                            )
-
-                            def highlight_dups(row):
-                                if row['Count'] > 1:
+                            def highlight_row(row, _exc=exclusive_codes, _col=exclusive_color):
+                                code = str(row.get('Job Code', '')).strip()
+                                if code in _exc:
+                                    return [f'background-color: {_col}'] * len(row)
+                                if row.get('Count', 1) > 1:
                                     return ['background-color: #FFF3CD'] * len(row)
                                 return [''] * len(row)
 
-                            if not df_detail.empty:
-                                styled = df_detail.style.apply(highlight_dups, axis=1)
-                                st.dataframe(styled, use_container_width=True, hide_index=True)
-                                if dup_codes:
-                                    st.caption(
-                                        f"⚠️ Duplicate Job Codes: {', '.join(sorted(dup_codes))}"
-                                    )
+                            styled = df_detail.style.apply(highlight_row, axis=1)
+                            st.dataframe(styled, use_container_width=True, hide_index=True)
+
+                            dup_codes = set(df_detail.loc[df_detail['Count'] > 1, 'Job Code'].tolist())
+                            if dup_codes:
+                                st.caption(f"⚠️ Duplicate Job Codes: {', '.join(sorted(map(str, dup_codes)))}")
 
                         with c1:
-                            render_detail_table(detail1, machinery, label1)
+                            render_detail_table(df1_m, label1, only_in_1, '#FFD180')
                         with c2:
-                            render_detail_table(detail2, machinery, label2)
+                            render_detail_table(df2_m, label2, only_in_2, '#BBDEFB')
     else:
         st.info("Please upload both CSV files to generate the machinery count comparison report.")
 
