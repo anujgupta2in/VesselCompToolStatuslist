@@ -681,6 +681,8 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
     subhdr_fill2  = PatternFill(start_color="ED7D31", end_color="ED7D31", fill_type="solid")
     subhdr_font   = Font(bold=True, color="FFFFFF")
     dup_fill      = PatternFill(start_color="FFF3CD", end_color="FFF3CD", fill_type="solid")
+    only1_fill    = PatternFill(start_color="FFD180", end_color="FFD180", fill_type="solid")
+    only2_fill    = PatternFill(start_color="BBDEFB", end_color="BBDEFB", fill_type="solid")
     alt_fill      = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
     machinery_fill = PatternFill(start_color="D6E4F0", end_color="D6E4F0", fill_type="solid")
     machinery_font = Font(bold=True)
@@ -700,7 +702,26 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
     detail_sheet.column_dimensions['G'].width = 55  # Job Title (file 2)
     detail_sheet.column_dimensions['H'].width = 8   # Count (file 2)
 
-    cur_row = 1
+    # Legend row at the top of the detail sheet
+    legend_items = [
+        ("Only in left file", "FFD180"),
+        ("Only in right file", "BBDEFB"),
+        ("Duplicate Job Code", "FFF3CD"),
+    ]
+    detail_sheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=2)
+    legend_hdr = detail_sheet.cell(row=1, column=1, value="Legend:")
+    legend_hdr.font = Font(bold=True)
+    col_offset = 3
+    for label, color in legend_items:
+        swatch_cell = detail_sheet.cell(row=1, column=col_offset, value="  " + label)
+        swatch_cell.fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+        swatch_cell.font = Font(bold=False)
+        detail_sheet.column_dimensions[
+            detail_sheet.cell(row=1, column=col_offset).column_letter
+        ].width = max(18, len(label) + 4)
+        col_offset += 2
+
+    cur_row = 3  # leave a blank row after the legend
 
     for machinery in diff_machineries:
         # Machinery name header spanning all columns
@@ -757,44 +778,61 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
         df1 = df1.reset_index(drop=True)
         df2 = df2.reset_index(drop=True)
 
-        dup_codes1 = set(df1.loc[df1['Count'] > 1, 'Job Code'].tolist()) if not df1.empty else set()
-        dup_codes2 = set(df2.loc[df2['Count'] > 1, 'Job Code'].tolist()) if not df2.empty else set()
+        dup_codes1  = set(df1.loc[df1['Count'] > 1, 'Job Code'].astype(str).str.strip()) if not df1.empty else set()
+        dup_codes2  = set(df2.loc[df2['Count'] > 1, 'Job Code'].astype(str).str.strip()) if not df2.empty else set()
+        all_codes1  = set(df1['Job Code'].astype(str).str.strip()) if not df1.empty else set()
+        all_codes2  = set(df2['Job Code'].astype(str).str.strip()) if not df2.empty else set()
+        excl_codes1 = all_codes1 - all_codes2   # only in file 1 → orange
+        excl_codes2 = all_codes2 - all_codes1   # only in file 2 → blue
+
+        def _row_fill1(code, count, alt):
+            c = str(code).strip()
+            if c in excl_codes1:
+                return only1_fill
+            if count > 1:
+                return dup_fill
+            return alt or PatternFill()
+
+        def _row_fill2(code, count, alt):
+            c = str(code).strip()
+            if c in excl_codes2:
+                return only2_fill
+            if count > 1:
+                return dup_fill
+            return alt or PatternFill()
 
         for i in range(max_rows):
             row_alt = alt_fill if i % 2 == 1 else None
-            base_fill = row_alt or PatternFill()
 
             # File 1 columns: A=No., B=Job Code, C=Job Title, D=Count (cols 1-4)
             if i < len(df1):
                 r1 = df1.iloc[i]
-                is_dup1 = r1['Job Code'] in dup_codes1
-                fill1 = dup_fill if is_dup1 else base_fill
+                fill1 = _row_fill1(r1['Job Code'], int(r1['Count']), row_alt)
                 detail_sheet.cell(row=cur_row, column=1, value=i + 1).fill = fill1
                 for c, val in enumerate([r1['Job Code'], r1['Job Title'], int(r1['Count'])], 2):
                     cell = detail_sheet.cell(row=cur_row, column=c, value=val)
                     cell.fill = fill1
                     cell.alignment = wrap_align
-                if is_dup1:
+                if int(r1['Count']) > 1:
                     detail_sheet.cell(row=cur_row, column=4).font = Font(bold=True, color="9C6500")
             else:
                 for c in range(1, 5):
-                    detail_sheet.cell(row=cur_row, column=c, value='').fill = base_fill
+                    detail_sheet.cell(row=cur_row, column=c, value='').fill = row_alt or PatternFill()
 
             # File 2 columns: E=No., F=Job Code, G=Job Title, H=Count (cols 5-8)
             if i < len(df2):
                 r2 = df2.iloc[i]
-                is_dup2 = r2['Job Code'] in dup_codes2
-                fill2 = dup_fill if is_dup2 else base_fill
+                fill2 = _row_fill2(r2['Job Code'], int(r2['Count']), row_alt)
                 detail_sheet.cell(row=cur_row, column=5, value=i + 1).fill = fill2
                 for c, val in enumerate([r2['Job Code'], r2['Job Title'], int(r2['Count'])], 6):
                     cell = detail_sheet.cell(row=cur_row, column=c, value=val)
                     cell.fill = fill2
                     cell.alignment = wrap_align
-                if is_dup2:
+                if int(r2['Count']) > 1:
                     detail_sheet.cell(row=cur_row, column=8).font = Font(bold=True, color="9C6500")
             else:
                 for c in range(5, 9):
-                    detail_sheet.cell(row=cur_row, column=c, value='').fill = base_fill
+                    detail_sheet.cell(row=cur_row, column=c, value='').fill = row_alt or PatternFill()
 
             cur_row += 1
 
