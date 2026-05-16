@@ -1,33 +1,31 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Font, Color
+from openpyxl.styles import PatternFill, Font, Alignment
 import re
 import os
 from io import BytesIO
 
+
 def extract_date_from_filename(filename):
-    """Extract and format date from filename."""
     base_name = os.path.splitext(os.path.basename(filename))[0]
     date_part = base_name.split()[-1]
     return f"{date_part[0:2]}-{date_part[2:4]}-{date_part[4:]}"
 
+
 def get_vessel_name(df):
-    """Extract vessel name from DataFrame."""
     if "Vessel" in df.columns:
         vessel = df["Vessel"].dropna().astype(str).iloc[0].strip()
         return vessel
     return "Unknown Vessel"
 
-def rename_machinery(value):
-     # Step 1: Convert to string and normalize whitespace & dashes
-    original_value = str(value).strip()
-    original_value = re.sub(r"\s+", " ", original_value)         # normalize multiple spaces
-    original_value = re.sub(r"[–—]", "-", original_value)        # normalize all dash types to hyphen
-    compact_value = re.sub(r"\s+", "", original_value)  
 
-    # Priority 1: Specific edge-case replacements
+def rename_machinery(value):
+    original_value = str(value).strip()
+    original_value = re.sub(r"\s+", " ", original_value)
+    original_value = re.sub(r"[–—]", "-", original_value)
+    compact_value = re.sub(r"\s+", "", original_value)
+
     specific_mapping = {
-        # Provision Cranes (existing + new)
         r"^Provision CraneA-?P$": "Provision Crane A-P",
         r"^Provision CraneAft-?Port$": "Provision Crane A-P",
         r"^Provision CraneF-?P$": "Provision Crane F-P",
@@ -40,483 +38,306 @@ def rename_machinery(value):
         r"^Provision CranePort1$": "Provision Crane P1",
         r"^Provision CraneS1$": "Provision Crane S1",
         r"^Provision CraneStarboard1$": "Provision Crane S1",
-
-        # Liferaft/Rescue Davits
         r"^Liferaft/Rescue Boat DavitS$": "Liferaft/Rescue Boat Davit S",
         r"^Liferaft/Rescue Boat DavitStarboard$": "Liferaft/Rescue Boat Davit S",
-
-        # Rescue Boat
         r"^Rescue BoatS$": "Rescue Boat S",
         r"^Rescue BoatStarboard$": "Rescue Boat S",
-
-        # Chain Locker
         r"^Chain LockerP1$": "Chain Locker P1",
         r"^Chain LockerPort1$": "Chain Locker P1",
         r"^Chain LockerS1$": "Chain Locker S1",
         r"^Chain LockerStarboard1$": "Chain Locker S1",
-
-        # Combined Windlass Mooring Winch
         r"^Combined Windlass Mooring WinchF1$": "Combined Windlass Mooring Winch F1",
         r"^Combined Windlass Mooring WinchF2$": "Combined Windlass Mooring Winch F2",
         r"^Combined Windlass Mooring WinchForward1$": "Combined Windlass Mooring Winch F1",
         r"^Combined Windlass Mooring WinchForward2$": "Combined Windlass Mooring Winch F2",
-
-        # Mooring Winch
         r"^Mooring WinchA1$": "Mooring Winch A1",
         r"^Mooring WinchA2$": "Mooring Winch A2",
         r"^Mooring WinchAft1$": "Mooring Winch A1",
         r"^Mooring WinchAft2$": "Mooring Winch A2",
-
-        # Muster Station
         r"^Muster StationA1$": "Muster Station A1",
         r"^Muster StationAft1$": "Muster Station A1",
-
-        # Accommodation Ladder
         r"^Accommodation LadderP1$": "Accommodation Ladder P1",
         r"^Accommodation LadderPort1$": "Accommodation Ladder P1",
         r"^Accommodation LadderS1$": "Accommodation Ladder S1",
         r"^Accommodation LadderStarboard1$": "Accommodation Ladder S1",
-
-        # Anchor Chain Cable
         r"^Anchor Chain CableP1$": "Anchor Chain Cable P1",
         r"^Anchor Chain CablePort1$": "Anchor Chain Cable P1",
         r"^Anchor Chain CableS1$": "Anchor Chain Cable S1",
         r"^Anchor Chain CableStarboard1$": "Anchor Chain Cable S1",
-
-        # Anchor
         r"^AnchorP1$": "Anchor P1",
         r"^AnchorPort1$": "Anchor P1",
         r"^AnchorS1$": "Anchor S1",
         r"^AnchorStarboard1$": "Anchor S1",
-
-        
-           # Pilot Combination Ladder
-    r"^Pilot Combination LadderP1$": "Pilot Combination Ladder P1",
-    r"^Pilot Combination LadderPort1$": "Pilot Combination Ladder P1",
-    r"^Pilot Combination LadderS1$": "Pilot Combination Ladder S1",
-    r"^Pilot Combination LadderStarboard1$": "Pilot Combination Ladder S1",
-
-    # Bunker Davit
-    r"^Bunker DavitP1$": "Bunker Davit P1",
-    r"^Bunker DavitPort1$": "Bunker Davit P1",
-    r"^Bunker DavitS1$": "Bunker Davit S1",
-    r"^Bunker DavitStarboard1$": "Bunker Davit S1",
-
-    # Combined Windlass Mooring Winch
-    r"^Combined Windlass Mooring WinchP1$": "Combined Windlass Mooring Winch P1",
-    r"^Combined Windlass Mooring WinchPort1$": "Combined Windlass Mooring Winch P1",
-    r"^Combined Windlass Mooring WinchS1$": "Combined Windlass Mooring Winch S1",
-    r"^Combined Windlass Mooring WinchStarboard1$": "Combined Windlass Mooring Winch S1",
-
-    # Pilot Ladder Davit
-    r"^Pilot Ladder DavitP1$": "Pilot Ladder Davit P1",
-    r"^Pilot Ladder DavitPort1$": "Pilot Ladder Davit P1",
-    r"^Pilot Ladder DavitS2$": "Pilot Ladder Davit S1",
-    r"^Pilot Ladder DavitStarboard2$": "Pilot Ladder Davit S1",
-
-    # Seaway Equipment
-    r"^Seaway EquipmentP1$": "Seaway Equipment P1",
-    r"^Seaway EquipmentPort1$": "Seaway Equipment P1",
-    r"^Seaway EquipmentS1$": "Seaway Equipment S1",
-    r"^Seaway EquipmentStarboard1$": "Seaway Equipment S1",
-
-    # Lifeboat
-    r"^LifeboatA1$": "Lifeboat A1",
-    r"^LifeboatAft1$": "Lifeboat A1",
-
-    # Liferaft Embarkation Ladder
-    r"^Liferaft Embarkation LadderF1$": "Liferaft Embarkation Ladder F1",
-    r"^Liferaft Embarkation LadderForward1$": "Liferaft Embarkation Ladder F1",
-    r"^Liferaft Embarkation LadderP1$": "Liferaft Embarkation Ladder P1",
-    r"^Liferaft Embarkation LadderPort1$": "Liferaft Embarkation Ladder P1",
-    r"^Liferaft Embarkation LadderS1$": "Liferaft Embarkation Ladder S1",
-    r"^Liferaft Embarkation LadderStarboard1$": "Liferaft Embarkation Ladder S1",
-
-    # Liferaft
-    r"^LiferaftP1$": "Liferaft P1",
-    r"^LiferaftPort1$": "Liferaft P1",
-    r"^LiferaftP2$": "Liferaft P2",
-    r"^LiferaftPort2$": "Liferaft P2",
-    r"^LiferaftS1$": "Liferaft S1",
-    r"^LiferaftStarboard1$": "Liferaft S1",
-    r"^LiferaftS2$": "Liferaft S2",
-    r"^LiferaftStarboard2$": "Liferaft S2",
-
-    # Mooring Winch
-    r"^Mooring WinchA3$": "Mooring Winch A3",
-    r"^Mooring WinchAft3$": "Mooring Winch A3",
-    r"^Mooring WinchA4$": "Mooring Winch A4",
-    r"^Mooring WinchAft4$": "Mooring Winch A4",
-    r"^Mooring WinchF1$": "Mooring Winch F1",
-    r"^Mooring WinchForward1$": "Mooring Winch F1",
-    r"^Mooring WinchF2$": "Mooring Winch F2",
-    r"^Mooring WinchForward2$": "Mooring Winch F2",
-
-    # Pilot Ladder
-    r"^Pilot LadderP1$": "Pilot Ladder P1",
-    r"^Pilot LadderPort1$": "Pilot Ladder P1",
-    r"^Pilot LadderS1$": "Pilot Ladder S1",
-    r"^Pilot LadderStarboard1$": "Pilot Ladder S1",
-
-    # Rescue Boat
-    r"^Rescue BoatP1$": "Rescue Boat P1",
-    r"^Rescue BoatPort1$": "Rescue Boat P1",
-
-    r"^Combined Mooring Winch Hydraulic UnitF1$": "Combined Mooring Winch Hydraulic Unit F1",
-    r"^Combined Mooring Winch Hydraulic UnitForward1$": "Combined Mooring Winch Hydraulic Unit F1",
-
-    # Emergency Towing System
-    r"^Emergency Towing SystemA1$": "Emergency Towing System A1",
-    r"^Emergency Towing SystemAft1$": "Emergency Towing System A1",
-    r"^Emergency Towing SystemF1$": "Emergency Towing System F1",
-    r"^Emergency Towing SystemForward1$": "Emergency Towing System F1",
-
-    # Liferaft 15
-    r"^Liferaft 15P1$": "Liferaft 15P1",
-    r"^Liferaft 15P2$": "Liferaft 15P2",
-    r"^Liferaft 15Port1$": "Liferaft 15P1",
-    r"^Liferaft 15Port2$": "Liferaft 15P2",
-
-    # Liferaft 6PF
-    r"^Liferaft 6PF-P1$": "Liferaft 6PF-P1",
-    r"^Liferaft 6PFwd-Port1$": "Liferaft 6PF-P1",
-
-    # Liferaft Embarkation Ladder F-*
-    r"^Liferaft Embarkation LadderF-P1$": "Liferaft Embarkation Ladder F-P1",
-    r"^Liferaft Embarkation LadderF-S1$": "Liferaft Embarkation Ladder F-S1",
-    r"^Liferaft Embarkation LadderFwd-Port1$": "Liferaft Embarkation Ladder F-P1",
-    r"^Liferaft Embarkation LadderFwd-Stbd1$": "Liferaft Embarkation Ladder F-S1",
-
-    # Mooring Winch Hydraulic Unit
-    r"^Mooring Winch Hydraulic UnitA1$": "Mooring Winch Hydraulic Unit A1",
-    r"^Mooring Winch Hydraulic UnitAft1$": "Mooring Winch Hydraulic Unit A1",
-
-    # Rescue Boat S
-    r"^Rescue BoatS1$": "Rescue Boat S1",
-    r"^Rescue BoatStarboard1$": "Rescue Boat S1",
-
-    # SART
-    r"^SARTP1$": "SART P1",
-    r"^SARTPort1$": "SART P1",
-    r"^SARTS1$": "SART S1",
-    r"^SARTStarboard1$": "SART S1",
-
-        # Liferaft 15PPort
-    r"^Liferaft 15PPort1$": "Liferaft 15PP1",
-    r"^Liferaft 15PPort2$": "Liferaft 15PP2", 
-
-         # ICCP
-    r"^ICCPA1$": "ICCP A1",
-    r"^ICCPAft1$": "ICCP A1",
-    r"^ICCPF1$": "ICCP F1",
-    r"^ICCPForward1$": "ICCP F1",
-
-    # Slewing Fuel Hose Crane
-    r"^Slewing Fuel Hose CraneP1$": "Slewing Fuel Hose Crane P1",
-    r"^Slewing Fuel Hose CranePort1$": "Slewing Fuel Hose Crane P1",
-    r"^Slewing Fuel Hose CraneS1$": "Slewing Fuel Hose Crane S1",
-    r"^Slewing Fuel Hose CraneStarboard1$": "Slewing Fuel Hose Crane S1",
-
-     # Combined Windlass Mooring Winch F-*
-    r"^Combined Windlass Mooring WinchF-P1$": "Combined Windlass Mooring Winch F-P1",
-    r"^Combined Windlass Mooring WinchF-S1$": "Combined Windlass Mooring Winch F-S1",
-    r"^Combined Windlass Mooring WinchFwd-Port1$": "Combined Windlass Mooring Winch F-P1",
-    r"^Combined Windlass Mooring WinchFwd-Stbd1$": "Combined Windlass Mooring Winch F-S1",
-
-    # Lifeboat Davit
-    r"^Lifeboat DavitP1$": "Lifeboat Davit P1",
-    r"^Lifeboat DavitPort1$": "Lifeboat Davit P1",
-
-    # Lifeboat
-    r"^LifeboatP1$": "Lifeboat P1",
-    r"^LifeboatPort1$": "Lifeboat P1",
-
-    # Liferaft Embarkation Ladder P2/S2
-    r"^Liferaft Embarkation LadderP2$": "Liferaft Embarkation Ladder P2",
-    r"^Liferaft Embarkation LadderPort2$": "Liferaft Embarkation Ladder P2",
-    r"^Liferaft Embarkation LadderS2$": "Liferaft Embarkation Ladder S2",
-    r"^Liferaft Embarkation LadderStarboard2$": "Liferaft Embarkation Ladder S2",
-
-    # Liferaft/Rescue Boat Davit
-    r"^Liferaft/Rescue Boat DavitS1$": "Liferaft/Rescue Boat Davit S1",
-    r"^Liferaft/Rescue Boat DavitStarboard1$": "Liferaft/Rescue Boat Davit S1",
-
-    # Mooring Winch Centre
-    r"^Mooring WinchC1$": "Mooring Winch C1",
-    r"^Mooring WinchCentre1$": "Mooring Winch C1",
-
-
-       # Hatch Cover Aft to A mapping
-    r"^Hatch CoverA1$": "Hatch Cover A1",
-    r"^Hatch CoverA2$": "Hatch Cover A2",
-    r"^Hatch CoverA3$": "Hatch Cover A3",
-    r"^Hatch CoverA4$": "Hatch Cover A4",
-    r"^Hatch CoverA5$": "Hatch Cover A5",
-    r"^Hatch CoverA6$": "Hatch Cover A6",
-    r"^Hatch CoverA7$": "Hatch Cover A7",
-    r"^Hatch CoverAft1$": "Hatch Cover A1",
-    r"^Hatch CoverAft2$": "Hatch Cover A2",
-    r"^Hatch CoverAft3$": "Hatch Cover A3",
-    r"^Hatch CoverAft4$": "Hatch Cover A4",
-    r"^Hatch CoverAft5$": "Hatch Cover A5",
-    r"^Hatch CoverAft6$": "Hatch Cover A6",
-    r"^Hatch CoverAft7$": "Hatch Cover A7",
-
-    # Hatch Cover Centre to C mapping
-    r"^Hatch CoverC1$": "Hatch Cover C1",
-    r"^Hatch CoverC2$": "Hatch Cover C2",
-    r"^Hatch CoverCentre1$": "Hatch Cover C1",
-    r"^Hatch CoverCentre2$": "Hatch Cover C2",
-
-    # Hatch Cover Forward to F mapping
-    r"^Hatch CoverF1$": "Hatch Cover F1",
-    r"^Hatch CoverF2$": "Hatch Cover F2",
-    r"^Hatch CoverF3$": "Hatch Cover F3",
-    r"^Hatch CoverF4$": "Hatch Cover F4",
-    r"^Hatch CoverF5$": "Hatch Cover F5",
-    r"^Hatch CoverF6$": "Hatch Cover F6",
-    r"^Hatch CoverF7$": "Hatch Cover F7",
-    r"^Hatch CoverForward1$": "Hatch Cover F1",
-    r"^Hatch CoverForward2$": "Hatch Cover F2",
-    r"^Hatch CoverForward3$": "Hatch Cover F3",
-    r"^Hatch CoverForward4$": "Hatch Cover F4",
-    r"^Hatch CoverForward5$": "Hatch Cover F5",
-    r"^Hatch CoverForward6$": "Hatch Cover F6",
-    r"^Hatch CoverForward7$": "Hatch Cover F7",
-
-  # Mooring Winch Centre to C mapping (corrected)
-    r"^Mooring WinchC2$": "Mooring Winch C2",
-    r"^Mooring WinchCentre2$": "Mooring Winch C2",
-
-    # Mooring Winch P variants
-    r"^Mooring WinchP1$": "Mooring Winch P1",
-    r"^Mooring WinchP2$": "Mooring Winch P2",
-    r"^Mooring WinchP3$": "Mooring Winch P3",
-    r"^Mooring WinchPort1$": "Mooring Winch P1",
-    r"^Mooring WinchPort2$": "Mooring Winch P2",
-    r"^Mooring WinchPort3$": "Mooring Winch P3",
-
-    # Mooring Winch S variants
-    r"^Mooring WinchS1$": "Mooring Winch S1",
-    r"^Mooring WinchS2$": "Mooring Winch S2",
-    r"^Mooring WinchStarboard1$": "Mooring Winch S1",
-    r"^Mooring WinchStarboard2$": "Mooring Winch S2",
-
-
-    # Lifeboat/Rescue Boat
-    r"^Lifeboat/Rescue BoatS1$": "Lifeboat/Rescue Boat S1",
-    r"^Lifeboat/Rescue BoatStarboard1$": "Lifeboat/Rescue Boat S1",
-
-    # Liferaft F1 / Forward1
-    r"^LiferaftF1$": "Liferaft F1",
-    r"^LiferaftForward1$": "Liferaft F1",
-
-    # Muster Station
-    r"^Muster StationP1$": "Muster Station P1",
-    r"^Muster StationPort1$": "Muster Station P1",
-    r"^Muster StationS1$": "Muster Station S1",
-    r"^Muster StationStarboard1$": "Muster Station S1",
-
-        # Pilot Combination Ladder P2
-    r"^Pilot Combination LadderP2$": "Pilot Combination Ladder P2",
-    r"^Pilot Combination LadderPort2$": "Pilot Combination Ladder P2",
-
-  
-    # Liferaft Forward Port/Starboard
-    r"^LiferaftFP$": "Liferaft FP",
-    r"^LiferaftFS$": "Liferaft FS",
-    r"^LiferaftFwd-P$": "Liferaft FP",
-    r"^LiferaftFwdS$": "Liferaft FS",
-
-    # Lifeboat Davit
-    r"^Lifeboat DavitS1$": "Lifeboat Davit S1",
-    r"^Lifeboat DavitStarboard1$": "Lifeboat Davit S1",
-
-    # Lifeboat/Rescue Boat
-    r"^Lifeboat/Rescue BoatP1$": "Lifeboat/Rescue Boat P1",
-    r"^Lifeboat/Rescue BoatPort1$": "Lifeboat/Rescue Boat P1",
-
-    # Lifeboat
-    r"^LifeboatS1$": "Lifeboat S1",
-    r"^LifeboatStarboard1$": "Lifeboat S1",
-
-    # Liferaft 16 Person
-    r"^Liferaft 16 PersonP1$": "Liferaft 16 Person P1",
-    r"^Liferaft 16 PersonP2$": "Liferaft 16 Person P2",
-    r"^Liferaft 16 PersonPort1$": "Liferaft 16 Person P1",
-    r"^Liferaft 16 PersonPort2$": "Liferaft 16 Person P2",
-    r"^Liferaft 16 PersonS1$": "Liferaft 16 Person S1",
-    r"^Liferaft 16 PersonS2$": "Liferaft 16 Person S2",
-    r"^Liferaft 16 PersonStarboard1$": "Liferaft 16 Person S1",
-    r"^Liferaft 16 PersonStarboard2$": "Liferaft 16 Person S2",
-
-    # Liferaft 6 Person
-    r"^Liferaft 6 PersonF-P1$": "Liferaft 6 Person F-P1",
-    r"^Liferaft 6 PersonFwd-Port1$": "Liferaft 6 Person F-P1",
-
-    # Liferaft/Rescue Boat Davit
-    r"^Liferaft/Rescue Boat DavitP1$": "Liferaft/Rescue Boat Davit P1",
-    r"^Liferaft/Rescue Boat DavitPort1$": "Liferaft/Rescue Boat Davit P1",
-
-    # Mooring Winch M
-    r"^Mooring WinchM1$": "Mooring Winch M1",
-    r"^Mooring WinchM2$": "Mooring Winch M2",
-    r"^Mooring WinchM3$": "Mooring Winch M3",
-    r"^Mooring WinchM4$": "Mooring Winch M4",
-    r"^Mooring WinchM5$": "Mooring Winch M5",
-    r"^Mooring WinchM6$": "Mooring Winch M6",
-    r"^Mooring WinchMiddle1$": "Mooring Winch M1",
-    r"^Mooring WinchMiddle2$": "Mooring Winch M2",
-    r"^Mooring WinchMiddle3$": "Mooring Winch M3",
-    r"^Mooring WinchMiddle4$": "Mooring Winch M4",
-    r"^Mooring WinchMiddle5$": "Mooring Winch M5",
-    r"^Mooring WinchMiddle6$": "Mooring Winch M6",
-
-        # Liferaft/Rescue Boat Davit S2
-    r"^Liferaft/Rescue Boat DavitS2$": "Liferaft/Rescue Boat Davit S2",
-    r"^Liferaft/Rescue Boat DavitStarboard2$": "Liferaft/Rescue Boat Davit S2",
-
-        # Lifeboat/Rescue Boat Davit S1
-    r"^Lifeboat/Rescue Boat DavitS1$": "Lifeboat/Rescue Boat Davit S1",
-    r"^Lifeboat/Rescue Boat DavitStarboard1$": "Lifeboat/Rescue Boat Davit S1",
-
-    # Liferaft Embarkation Ladder P3/S3
-    r"^Liferaft Embarkation LadderP3$": "Liferaft Embarkation Ladder P3",
-    r"^Liferaft Embarkation LadderPort3$": "Liferaft Embarkation Ladder P3",
-    r"^Liferaft Embarkation LadderS3$": "Liferaft Embarkation Ladder S3",
-    r"^Liferaft Embarkation LadderStarboard3$": "Liferaft Embarkation Ladder S3",
-
-        # Liferaft 6 Person F1
-    r"^Liferaft 6 PersonF1$": "Liferaft 6 Person F1",
-    r"^Liferaft 6 PersonForward1$": "Liferaft 6 Person F1",
-
-    # Mooring Winch Aft combinations
-    r"^Mooring WinchA-P1$": "Mooring Winch A-P1",
-    r"^Mooring WinchA-P2$": "Mooring Winch A-P2",
-    r"^Mooring WinchA-S1$": "Mooring Winch A-S1",
-    r"^Mooring WinchA-S2$": "Mooring Winch A-S2",
-    r"^Mooring WinchAft-Port1$": "Mooring Winch A-P1",
-    r"^Mooring WinchAft-Port2$": "Mooring Winch A-P2",
-    r"^Mooring WinchAft-Stbd1$": "Mooring Winch A-S1",
-    r"^Mooring WinchAft-Stbd2$": "Mooring Winch A-S2",
-
-    # Mooring Winch Forward combinations
-    r"^Mooring WinchF-P1$": "Mooring Winch F-P1",
-    r"^Mooring WinchF-S1$": "Mooring Winch F-S1",
-    r"^Mooring WinchFwd-Port1$": "Mooring Winch F-P1",
-    r"^Mooring WinchFwd-Stbd1$": "Mooring Winch F-S1",
-
-
-        # Liferaft FP / FS
-    r"^LiferaftFP$": "Liferaft FP",
-    r"^LiferaftFS$": "Liferaft FS",
-    r"^LiferaftFwd-P$": "Liferaft FP",
-    r"^LiferaftFwdS$": "Liferaft FS",
-
-    # Combined Mooring Winch Hydraulic Unit
-    r"^Combined Mooring Winch Hydraulic UnitA1$": "Combined Mooring Winch Hydraulic Unit A1",
-    r"^Combined Mooring Winch Hydraulic UnitAft1$": "Combined Mooring Winch Hydraulic Unit A1",
-
-    # Emergency Towing System F2
-    r"^Emergency Towing SystemF2$": "Emergency Towing System F2",
-    r"^Emergency Towing SystemForward2$": "Emergency Towing System F2",
-
-    # Liferaft 20 Person
-    r"^Liferaft 20 PersonP1$": "Liferaft 20 Person P1",
-    r"^Liferaft 20 PersonP2$": "Liferaft 20 Person P2",
-    r"^Liferaft 20 PersonPort1$": "Liferaft 20 Person P1",
-    r"^Liferaft 20 PersonPort2$": "Liferaft 20 Person P2",
-    r"^Liferaft 20 PersonS1$": "Liferaft 20 Person S1",
-    r"^Liferaft 20 PersonS2$": "Liferaft 20 Person S2",
-    r"^Liferaft 20 PersonStarboard1$": "Liferaft 20 Person S1",
-    r"^Liferaft 20 PersonStarboard2$": "Liferaft 20 Person S2",
-
-    # Mooring Winch Hydraulic Unit Forward
-    r"^Mooring Winch Hydraulic UnitF1$": "Mooring Winch Hydraulic Unit F1",
-    r"^Mooring Winch Hydraulic UnitForward1$": "Mooring Winch Hydraulic Unit F1",
-
-    # Provision Crane Starboard
-    r"^Provision Crane StbdS1$": "Provision Crane S1",
-    r"^Provision Crane StbdStarboard1$": "Provision Crane S1",
-
-            # Liferaft Embarkation Ladder FS
-    r"^Liferaft Embarkation LadderFS$": "Liferaft Embarkation Ladder FS",
-    r"^Liferaft Embarkation LadderFwdS$": "Liferaft Embarkation Ladder FS",
-
-    # Liferaft FP / FS
-    r"^LiferaftFP$": "Liferaft FP",
-    r"^LiferaftFS$": "Liferaft FS",
-    r"^LiferaftFwd-P$": "Liferaft FP",
-    r"^LiferaftFwdS$": "Liferaft FS",
-
-        # Combined Mooring Winch Hydraulic Unit F2
-    r"^Combined Mooring Winch Hydraulic UnitF2$": "Combined Mooring Winch Hydraulic Unit F2",
-    r"^Combined Mooring Winch Hydraulic UnitForward2$": "Combined Mooring Winch Hydraulic Unit F2",
-
-    # Mooring Winch Hydraulic Unit A2
-    r"^Mooring Winch Hydraulic UnitA2$": "Mooring Winch Hydraulic Unit A2",
-    r"^Mooring Winch Hydraulic UnitAft2$": "Mooring Winch Hydraulic Unit A2",
-
-        # Combined Windlass Mooring Winch FP / FS
-    r"^Combined Windlass Mooring WinchFP$": "Combined Windlass Mooring Winch FP",
-    r"^Combined Windlass Mooring WinchFS$": "Combined Windlass Mooring Winch FS",
-    r"^Combined Windlass Mooring WinchFwd-P$": "Combined Windlass Mooring Winch FP",
-    r"^Combined Windlass Mooring WinchFwdS$": "Combined Windlass Mooring Winch FS",
-
-    # Mooring Winch Aft/Side variants
-    r"^Mooring WinchA-P3$": "Mooring Winch A-P3",
-    r"^Mooring WinchA-S4$": "Mooring Winch A-S3",
-    r"^Mooring WinchAft-Port3$": "Mooring Winch A-P3",
-    r"^Mooring WinchAft-Stbd4$": "Mooring Winch A-S3",
-
-        # Liferaft 15 Person S1/S2
-    r"^Liferaft 15 PersonS1$": "Liferaft 15 Person S1",
-    r"^Liferaft 15 PersonS2$": "Liferaft 15 Person S2",
-    r"^Liferaft 15 PersonStarboard1$": "Liferaft 15 Person S1",
-    r"^Liferaft 15 PersonStarboard2$": "Liferaft 15 Person S2",
-
-        # Bilge Well
-    r"^Bilge WellC1$": "Bilge Well C1",
-    r"^Bilge WellCentre1$": "Bilge Well C1",
-    r"^Bilge WellP1$": "Bilge Well P1",
-    r"^Bilge WellPort1$": "Bilge Well P1",
-    r"^Bilge WellS1$": "Bilge Well S1",
-    r"^Bilge WellStarboard1$": "Bilge Well S1",
-
-    # Chain Locker
-    r"^Chain LockerC1$": "Chain Locker C1",
-    r"^Chain LockerC2$": "Chain Locker C2",
-    r"^Chain LockerCentre1$": "Chain Locker C1",
-    r"^Chain LockerCentre2$": "Chain Locker C2",
-
-    # Suez Search Light Davit
-    r"^Suez Search Light DavitF1$": "Suez Search Light Davit F1",
-    r"^Suez Search Light DavitForward1$": "Suez Search Light Davit F1",
-
-        # Liferaft 15 Person P1/P2
-    r"^Liferaft 15 PersonP1$": "Liferaft 15 Person P1",
-    r"^Liferaft 15 PersonP2$": "Liferaft 15 Person P2",
-    r"^Liferaft 15 PersonPort1$": "Liferaft 15 Person P1",
-    r"^Liferaft 15 PersonPort2$": "Liferaft 15 Person P2",
-
-    # Liferaft 6 Person C1
-    r"^Liferaft 6 PersonC1$": "Liferaft 6 Person C1",
-    r"^Liferaft 6 PersonCentre1$": "Liferaft 6 Person C1",
-
-  
-    # Lifeboat Davit with dot notation
-    r"^Lifeboat Davit\.S1$": "Lifeboat Davit S",
-    r"^Lifeboat Davit\.Starboard1$": "Lifeboat Davit S",
-
-
-
+        r"^Pilot Combination LadderP1$": "Pilot Combination Ladder P1",
+        r"^Pilot Combination LadderPort1$": "Pilot Combination Ladder P1",
+        r"^Pilot Combination LadderS1$": "Pilot Combination Ladder S1",
+        r"^Pilot Combination LadderStarboard1$": "Pilot Combination Ladder S1",
+        r"^Bunker DavitP1$": "Bunker Davit P1",
+        r"^Bunker DavitPort1$": "Bunker Davit P1",
+        r"^Bunker DavitS1$": "Bunker Davit S1",
+        r"^Bunker DavitStarboard1$": "Bunker Davit S1",
+        r"^Combined Windlass Mooring WinchP1$": "Combined Windlass Mooring Winch P1",
+        r"^Combined Windlass Mooring WinchPort1$": "Combined Windlass Mooring Winch P1",
+        r"^Combined Windlass Mooring WinchS1$": "Combined Windlass Mooring Winch S1",
+        r"^Combined Windlass Mooring WinchStarboard1$": "Combined Windlass Mooring Winch S1",
+        r"^Pilot Ladder DavitP1$": "Pilot Ladder Davit P1",
+        r"^Pilot Ladder DavitPort1$": "Pilot Ladder Davit P1",
+        r"^Pilot Ladder DavitS2$": "Pilot Ladder Davit S1",
+        r"^Pilot Ladder DavitStarboard2$": "Pilot Ladder Davit S1",
+        r"^Seaway EquipmentP1$": "Seaway Equipment P1",
+        r"^Seaway EquipmentPort1$": "Seaway Equipment P1",
+        r"^Seaway EquipmentS1$": "Seaway Equipment S1",
+        r"^Seaway EquipmentStarboard1$": "Seaway Equipment S1",
+        r"^LifeboatA1$": "Lifeboat A1",
+        r"^LifeboatAft1$": "Lifeboat A1",
+        r"^Liferaft Embarkation LadderF1$": "Liferaft Embarkation Ladder F1",
+        r"^Liferaft Embarkation LadderForward1$": "Liferaft Embarkation Ladder F1",
+        r"^Liferaft Embarkation LadderP1$": "Liferaft Embarkation Ladder P1",
+        r"^Liferaft Embarkation LadderPort1$": "Liferaft Embarkation Ladder P1",
+        r"^Liferaft Embarkation LadderS1$": "Liferaft Embarkation Ladder S1",
+        r"^Liferaft Embarkation LadderStarboard1$": "Liferaft Embarkation Ladder S1",
+        r"^LiferaftP1$": "Liferaft P1",
+        r"^LiferaftPort1$": "Liferaft P1",
+        r"^LiferaftP2$": "Liferaft P2",
+        r"^LiferaftPort2$": "Liferaft P2",
+        r"^LiferaftS1$": "Liferaft S1",
+        r"^LiferaftStarboard1$": "Liferaft S1",
+        r"^LiferaftS2$": "Liferaft S2",
+        r"^LiferaftStarboard2$": "Liferaft S2",
+        r"^Mooring WinchA3$": "Mooring Winch A3",
+        r"^Mooring WinchAft3$": "Mooring Winch A3",
+        r"^Mooring WinchA4$": "Mooring Winch A4",
+        r"^Mooring WinchAft4$": "Mooring Winch A4",
+        r"^Mooring WinchF1$": "Mooring Winch F1",
+        r"^Mooring WinchForward1$": "Mooring Winch F1",
+        r"^Mooring WinchF2$": "Mooring Winch F2",
+        r"^Mooring WinchForward2$": "Mooring Winch F2",
+        r"^Pilot LadderP1$": "Pilot Ladder P1",
+        r"^Pilot LadderPort1$": "Pilot Ladder P1",
+        r"^Pilot LadderS1$": "Pilot Ladder S1",
+        r"^Pilot LadderStarboard1$": "Pilot Ladder S1",
+        r"^Rescue BoatP1$": "Rescue Boat P1",
+        r"^Rescue BoatPort1$": "Rescue Boat P1",
+        r"^Combined Mooring Winch Hydraulic UnitF1$": "Combined Mooring Winch Hydraulic Unit F1",
+        r"^Combined Mooring Winch Hydraulic UnitForward1$": "Combined Mooring Winch Hydraulic Unit F1",
+        r"^Emergency Towing SystemA1$": "Emergency Towing System A1",
+        r"^Emergency Towing SystemAft1$": "Emergency Towing System A1",
+        r"^Emergency Towing SystemF1$": "Emergency Towing System F1",
+        r"^Emergency Towing SystemForward1$": "Emergency Towing System F1",
+        r"^Liferaft 15P1$": "Liferaft 15P1",
+        r"^Liferaft 15P2$": "Liferaft 15P2",
+        r"^Liferaft 15Port1$": "Liferaft 15P1",
+        r"^Liferaft 15Port2$": "Liferaft 15P2",
+        r"^Liferaft 6PF-P1$": "Liferaft 6PF-P1",
+        r"^Liferaft 6PFwd-Port1$": "Liferaft 6PF-P1",
+        r"^Liferaft Embarkation LadderF-P1$": "Liferaft Embarkation Ladder F-P1",
+        r"^Liferaft Embarkation LadderF-S1$": "Liferaft Embarkation Ladder F-S1",
+        r"^Liferaft Embarkation LadderFwd-Port1$": "Liferaft Embarkation Ladder F-P1",
+        r"^Liferaft Embarkation LadderFwd-Stbd1$": "Liferaft Embarkation Ladder F-S1",
+        r"^Mooring Winch Hydraulic UnitA1$": "Mooring Winch Hydraulic Unit A1",
+        r"^Mooring Winch Hydraulic UnitAft1$": "Mooring Winch Hydraulic Unit A1",
+        r"^Rescue BoatS1$": "Rescue Boat S1",
+        r"^Rescue BoatStarboard1$": "Rescue Boat S1",
+        r"^SARTP1$": "SART P1",
+        r"^SARTPort1$": "SART P1",
+        r"^SARTS1$": "SART S1",
+        r"^SARTStarboard1$": "SART S1",
+        r"^Liferaft 15PPort1$": "Liferaft 15PP1",
+        r"^Liferaft 15PPort2$": "Liferaft 15PP2",
+        r"^ICCPA1$": "ICCP A1",
+        r"^ICCPAft1$": "ICCP A1",
+        r"^ICCPF1$": "ICCP F1",
+        r"^ICCPForward1$": "ICCP F1",
+        r"^Slewing Fuel Hose CraneP1$": "Slewing Fuel Hose Crane P1",
+        r"^Slewing Fuel Hose CranePort1$": "Slewing Fuel Hose Crane P1",
+        r"^Slewing Fuel Hose CraneS1$": "Slewing Fuel Hose Crane S1",
+        r"^Slewing Fuel Hose CraneStarboard1$": "Slewing Fuel Hose Crane S1",
+        r"^Combined Windlass Mooring WinchF-P1$": "Combined Windlass Mooring Winch F-P1",
+        r"^Combined Windlass Mooring WinchF-S1$": "Combined Windlass Mooring Winch F-S1",
+        r"^Combined Windlass Mooring WinchFwd-Port1$": "Combined Windlass Mooring Winch F-P1",
+        r"^Combined Windlass Mooring WinchFwd-Stbd1$": "Combined Windlass Mooring Winch F-S1",
+        r"^Lifeboat DavitP1$": "Lifeboat Davit P1",
+        r"^Lifeboat DavitPort1$": "Lifeboat Davit P1",
+        r"^LifeboatP1$": "Lifeboat P1",
+        r"^LifeboatPort1$": "Lifeboat P1",
+        r"^Liferaft Embarkation LadderP2$": "Liferaft Embarkation Ladder P2",
+        r"^Liferaft Embarkation LadderPort2$": "Liferaft Embarkation Ladder P2",
+        r"^Liferaft Embarkation LadderS2$": "Liferaft Embarkation Ladder S2",
+        r"^Liferaft Embarkation LadderStarboard2$": "Liferaft Embarkation Ladder S2",
+        r"^Liferaft/Rescue Boat DavitS1$": "Liferaft/Rescue Boat Davit S1",
+        r"^Liferaft/Rescue Boat DavitStarboard1$": "Liferaft/Rescue Boat Davit S1",
+        r"^Mooring WinchC1$": "Mooring Winch C1",
+        r"^Mooring WinchCentre1$": "Mooring Winch C1",
+        r"^Hatch CoverA1$": "Hatch Cover A1",
+        r"^Hatch CoverA2$": "Hatch Cover A2",
+        r"^Hatch CoverA3$": "Hatch Cover A3",
+        r"^Hatch CoverA4$": "Hatch Cover A4",
+        r"^Hatch CoverA5$": "Hatch Cover A5",
+        r"^Hatch CoverA6$": "Hatch Cover A6",
+        r"^Hatch CoverA7$": "Hatch Cover A7",
+        r"^Hatch CoverAft1$": "Hatch Cover A1",
+        r"^Hatch CoverAft2$": "Hatch Cover A2",
+        r"^Hatch CoverAft3$": "Hatch Cover A3",
+        r"^Hatch CoverAft4$": "Hatch Cover A4",
+        r"^Hatch CoverAft5$": "Hatch Cover A5",
+        r"^Hatch CoverAft6$": "Hatch Cover A6",
+        r"^Hatch CoverAft7$": "Hatch Cover A7",
+        r"^Hatch CoverC1$": "Hatch Cover C1",
+        r"^Hatch CoverC2$": "Hatch Cover C2",
+        r"^Hatch CoverCentre1$": "Hatch Cover C1",
+        r"^Hatch CoverCentre2$": "Hatch Cover C2",
+        r"^Hatch CoverF1$": "Hatch Cover F1",
+        r"^Hatch CoverF2$": "Hatch Cover F2",
+        r"^Hatch CoverF3$": "Hatch Cover F3",
+        r"^Hatch CoverF4$": "Hatch Cover F4",
+        r"^Hatch CoverF5$": "Hatch Cover F5",
+        r"^Hatch CoverF6$": "Hatch Cover F6",
+        r"^Hatch CoverF7$": "Hatch Cover F7",
+        r"^Hatch CoverForward1$": "Hatch Cover F1",
+        r"^Hatch CoverForward2$": "Hatch Cover F2",
+        r"^Hatch CoverForward3$": "Hatch Cover F3",
+        r"^Hatch CoverForward4$": "Hatch Cover F4",
+        r"^Hatch CoverForward5$": "Hatch Cover F5",
+        r"^Hatch CoverForward6$": "Hatch Cover F6",
+        r"^Hatch CoverForward7$": "Hatch Cover F7",
+        r"^Mooring WinchC2$": "Mooring Winch C2",
+        r"^Mooring WinchCentre2$": "Mooring Winch C2",
+        r"^Mooring WinchP1$": "Mooring Winch P1",
+        r"^Mooring WinchP2$": "Mooring Winch P2",
+        r"^Mooring WinchP3$": "Mooring Winch P3",
+        r"^Mooring WinchPort1$": "Mooring Winch P1",
+        r"^Mooring WinchPort2$": "Mooring Winch P2",
+        r"^Mooring WinchPort3$": "Mooring Winch P3",
+        r"^Mooring WinchS1$": "Mooring Winch S1",
+        r"^Mooring WinchS2$": "Mooring Winch S2",
+        r"^Mooring WinchStarboard1$": "Mooring Winch S1",
+        r"^Mooring WinchStarboard2$": "Mooring Winch S2",
+        r"^Lifeboat/Rescue BoatS1$": "Lifeboat/Rescue Boat S1",
+        r"^Lifeboat/Rescue BoatStarboard1$": "Lifeboat/Rescue Boat S1",
+        r"^LiferaftF1$": "Liferaft F1",
+        r"^LiferaftForward1$": "Liferaft F1",
+        r"^Muster StationP1$": "Muster Station P1",
+        r"^Muster StationPort1$": "Muster Station P1",
+        r"^Muster StationS1$": "Muster Station S1",
+        r"^Muster StationStarboard1$": "Muster Station S1",
+        r"^Pilot Combination LadderP2$": "Pilot Combination Ladder P2",
+        r"^Pilot Combination LadderPort2$": "Pilot Combination Ladder P2",
+        r"^LiferaftFP$": "Liferaft FP",
+        r"^LiferaftFS$": "Liferaft FS",
+        r"^LiferaftFwd-P$": "Liferaft FP",
+        r"^LiferaftFwdS$": "Liferaft FS",
+        r"^Lifeboat DavitS1$": "Lifeboat Davit S1",
+        r"^Lifeboat DavitStarboard1$": "Lifeboat Davit S1",
+        r"^Lifeboat/Rescue BoatP1$": "Lifeboat/Rescue Boat P1",
+        r"^Lifeboat/Rescue BoatPort1$": "Lifeboat/Rescue Boat P1",
+        r"^LifeboatS1$": "Lifeboat S1",
+        r"^LifeboatStarboard1$": "Lifeboat S1",
+        r"^Liferaft 16 PersonP1$": "Liferaft 16 Person P1",
+        r"^Liferaft 16 PersonP2$": "Liferaft 16 Person P2",
+        r"^Liferaft 16 PersonPort1$": "Liferaft 16 Person P1",
+        r"^Liferaft 16 PersonPort2$": "Liferaft 16 Person P2",
+        r"^Liferaft 16 PersonS1$": "Liferaft 16 Person S1",
+        r"^Liferaft 16 PersonS2$": "Liferaft 16 Person S2",
+        r"^Liferaft 16 PersonStarboard1$": "Liferaft 16 Person S1",
+        r"^Liferaft 16 PersonStarboard2$": "Liferaft 16 Person S2",
+        r"^Liferaft 6 PersonF-P1$": "Liferaft 6 Person F-P1",
+        r"^Liferaft 6 PersonFwd-Port1$": "Liferaft 6 Person F-P1",
+        r"^Liferaft/Rescue Boat DavitP1$": "Liferaft/Rescue Boat Davit P1",
+        r"^Liferaft/Rescue Boat DavitPort1$": "Liferaft/Rescue Boat Davit P1",
+        r"^Mooring WinchM1$": "Mooring Winch M1",
+        r"^Mooring WinchM2$": "Mooring Winch M2",
+        r"^Mooring WinchM3$": "Mooring Winch M3",
+        r"^Mooring WinchM4$": "Mooring Winch M4",
+        r"^Mooring WinchM5$": "Mooring Winch M5",
+        r"^Mooring WinchM6$": "Mooring Winch M6",
+        r"^Mooring WinchMiddle1$": "Mooring Winch M1",
+        r"^Mooring WinchMiddle2$": "Mooring Winch M2",
+        r"^Mooring WinchMiddle3$": "Mooring Winch M3",
+        r"^Mooring WinchMiddle4$": "Mooring Winch M4",
+        r"^Mooring WinchMiddle5$": "Mooring Winch M5",
+        r"^Mooring WinchMiddle6$": "Mooring Winch M6",
+        r"^Liferaft/Rescue Boat DavitS2$": "Liferaft/Rescue Boat Davit S2",
+        r"^Liferaft/Rescue Boat DavitStarboard2$": "Liferaft/Rescue Boat Davit S2",
+        r"^Lifeboat/Rescue Boat DavitS1$": "Lifeboat/Rescue Boat Davit S1",
+        r"^Lifeboat/Rescue Boat DavitStarboard1$": "Lifeboat/Rescue Boat Davit S1",
+        r"^Liferaft Embarkation LadderP3$": "Liferaft Embarkation Ladder P3",
+        r"^Liferaft Embarkation LadderPort3$": "Liferaft Embarkation Ladder P3",
+        r"^Liferaft Embarkation LadderS3$": "Liferaft Embarkation Ladder S3",
+        r"^Liferaft Embarkation LadderStarboard3$": "Liferaft Embarkation Ladder S3",
+        r"^Liferaft 6 PersonF1$": "Liferaft 6 Person F1",
+        r"^Liferaft 6 PersonForward1$": "Liferaft 6 Person F1",
+        r"^Mooring WinchA-P1$": "Mooring Winch A-P1",
+        r"^Mooring WinchA-P2$": "Mooring Winch A-P2",
+        r"^Mooring WinchA-S1$": "Mooring Winch A-S1",
+        r"^Mooring WinchA-S2$": "Mooring Winch A-S2",
+        r"^Mooring WinchAft-Port1$": "Mooring Winch A-P1",
+        r"^Mooring WinchAft-Port2$": "Mooring Winch A-P2",
+        r"^Mooring WinchAft-Stbd1$": "Mooring Winch A-S1",
+        r"^Mooring WinchAft-Stbd2$": "Mooring Winch A-S2",
+        r"^Mooring WinchF-P1$": "Mooring Winch F-P1",
+        r"^Mooring WinchF-S1$": "Mooring Winch F-S1",
+        r"^Mooring WinchFwd-Port1$": "Mooring Winch F-P1",
+        r"^Mooring WinchFwd-Stbd1$": "Mooring Winch F-S1",
+        r"^Combined Mooring Winch Hydraulic UnitA1$": "Combined Mooring Winch Hydraulic Unit A1",
+        r"^Combined Mooring Winch Hydraulic UnitAft1$": "Combined Mooring Winch Hydraulic Unit A1",
+        r"^Emergency Towing SystemF2$": "Emergency Towing System F2",
+        r"^Emergency Towing SystemForward2$": "Emergency Towing System F2",
+        r"^Liferaft 20 PersonP1$": "Liferaft 20 Person P1",
+        r"^Liferaft 20 PersonP2$": "Liferaft 20 Person P2",
+        r"^Liferaft 20 PersonPort1$": "Liferaft 20 Person P1",
+        r"^Liferaft 20 PersonPort2$": "Liferaft 20 Person P2",
+        r"^Liferaft 20 PersonS1$": "Liferaft 20 Person S1",
+        r"^Liferaft 20 PersonS2$": "Liferaft 20 Person S2",
+        r"^Liferaft 20 PersonStarboard1$": "Liferaft 20 Person S1",
+        r"^Liferaft 20 PersonStarboard2$": "Liferaft 20 Person S2",
+        r"^Mooring Winch Hydraulic UnitF1$": "Mooring Winch Hydraulic Unit F1",
+        r"^Mooring Winch Hydraulic UnitForward1$": "Mooring Winch Hydraulic Unit F1",
+        r"^Provision Crane StbdS1$": "Provision Crane S1",
+        r"^Provision Crane StbdStarboard1$": "Provision Crane S1",
+        r"^Liferaft Embarkation LadderFS$": "Liferaft Embarkation Ladder FS",
+        r"^Liferaft Embarkation LadderFwdS$": "Liferaft Embarkation Ladder FS",
+        r"^Combined Mooring Winch Hydraulic UnitF2$": "Combined Mooring Winch Hydraulic Unit F2",
+        r"^Combined Mooring Winch Hydraulic UnitForward2$": "Combined Mooring Winch Hydraulic Unit F2",
+        r"^Mooring Winch Hydraulic UnitA2$": "Mooring Winch Hydraulic Unit A2",
+        r"^Mooring Winch Hydraulic UnitAft2$": "Mooring Winch Hydraulic Unit A2",
+        r"^Combined Windlass Mooring WinchFP$": "Combined Windlass Mooring Winch FP",
+        r"^Combined Windlass Mooring WinchFS$": "Combined Windlass Mooring Winch FS",
+        r"^Combined Windlass Mooring WinchFwd-P$": "Combined Windlass Mooring Winch FP",
+        r"^Combined Windlass Mooring WinchFwdS$": "Combined Windlass Mooring Winch FS",
+        r"^Mooring WinchA-P3$": "Mooring Winch A-P3",
+        r"^Mooring WinchA-S4$": "Mooring Winch A-S3",
+        r"^Mooring WinchAft-Port3$": "Mooring Winch A-P3",
+        r"^Mooring WinchAft-Stbd4$": "Mooring Winch A-S3",
+        r"^Liferaft 15 PersonS1$": "Liferaft 15 Person S1",
+        r"^Liferaft 15 PersonS2$": "Liferaft 15 Person S2",
+        r"^Liferaft 15 PersonStarboard1$": "Liferaft 15 Person S1",
+        r"^Liferaft 15 PersonStarboard2$": "Liferaft 15 Person S2",
+        r"^Bilge WellC1$": "Bilge Well C1",
+        r"^Bilge WellCentre1$": "Bilge Well C1",
+        r"^Bilge WellP1$": "Bilge Well P1",
+        r"^Bilge WellPort1$": "Bilge Well P1",
+        r"^Bilge WellS1$": "Bilge Well S1",
+        r"^Bilge WellStarboard1$": "Bilge Well S1",
+        r"^Chain LockerC1$": "Chain Locker C1",
+        r"^Chain LockerC2$": "Chain Locker C2",
+        r"^Chain LockerCentre1$": "Chain Locker C1",
+        r"^Chain LockerCentre2$": "Chain Locker C2",
+        r"^Suez Search Light DavitF1$": "Suez Search Light Davit F1",
+        r"^Suez Search Light DavitForward1$": "Suez Search Light Davit F1",
+        r"^Liferaft 15 PersonP1$": "Liferaft 15 Person P1",
+        r"^Liferaft 15 PersonP2$": "Liferaft 15 Person P2",
+        r"^Liferaft 15 PersonPort1$": "Liferaft 15 Person P1",
+        r"^Liferaft 15 PersonPort2$": "Liferaft 15 Person P2",
+        r"^Liferaft 6 PersonC1$": "Liferaft 6 Person C1",
+        r"^Liferaft 6 PersonCentre1$": "Liferaft 6 Person C1",
+        r"^Lifeboat Davit\.S1$": "Lifeboat Davit S",
+        r"^Lifeboat Davit\.Starboard1$": "Lifeboat Davit S",
     }
-    
+
     for pattern, replacement in specific_mapping.items():
         if re.match(pattern, original_value, flags=re.IGNORECASE):
             return replacement
 
-    # Priority 2: Generic suffix replacements for standard machinery types
     suffix_mapping = {
         r"(.*)(?:Aft)$": r"\1A",
         r"(.*)(?:Forward)$": r"\1F",
@@ -536,44 +357,217 @@ def rename_machinery(value):
     return original_value
 
 
+def _detect_col(df, candidates):
+    """Return the first column name from candidates that exists in df, or None."""
+    for c in candidates:
+        if c in df.columns:
+            return c
+    return None
+
+
+def _build_job_detail(df, machinery_col, title_col, code_col, freq_col=None):
+    """
+    For each machinery, return a DataFrame with columns:
+      Job Code | Job Title | Frequency | Count
+    where Count is how many rows share that (code, title, frequency) combination.
+    Returns a dict: {machinery_name -> DataFrame}
+    """
+    detail = {}
+    keep = [machinery_col]
+    if code_col:
+        keep.append(code_col)
+    if title_col:
+        keep.append(title_col)
+    if freq_col and freq_col in df.columns:
+        keep.append(freq_col)
+
+    sub = df[keep].copy()
+    sub[machinery_col] = sub[machinery_col].astype(str)
+
+    for machinery, grp in sub.groupby(machinery_col):
+        grp = grp.drop(columns=[machinery_col])
+        if grp.empty:
+            detail[machinery] = pd.DataFrame(columns=['Job Code', 'Job Title', 'Frequency', 'Count'])
+            continue
+
+        rename_map = {}
+        if code_col and code_col in grp.columns:
+            rename_map[code_col] = 'Job Code'
+        if title_col and title_col in grp.columns:
+            rename_map[title_col] = 'Job Title'
+        if freq_col and freq_col in grp.columns:
+            rename_map[freq_col] = 'Frequency'
+        grp = grp.rename(columns=rename_map)
+
+        if 'Job Code' not in grp.columns:
+            grp['Job Code'] = '-'
+        if 'Job Title' not in grp.columns:
+            grp['Job Title'] = '-'
+        if 'Frequency' not in grp.columns:
+            grp['Frequency'] = '-'
+
+        grp['Job Code']   = grp['Job Code'].fillna('-').astype(str)
+        grp['Job Title']  = grp['Job Title'].fillna('-').astype(str)
+        grp['Frequency']  = grp['Frequency'].fillna('-').astype(str)
+
+        counted = (
+            grp.groupby(['Job Code', 'Job Title', 'Frequency'], dropna=False)
+            .size()
+            .reset_index(name='Count')
+            .sort_values(['Job Code', 'Job Title', 'Frequency'])
+            .reset_index(drop=True)
+        )
+        detail[machinery] = counted
+
+    return detail
+
+
+def build_frequency_comparison(detail1, detail2, col1_label, col2_label, common_titles_map=None):
+    """
+    Compare the Frequency interval (e.g. "3 Months", "12 Months") for each job code
+    between the two files, for common job titles only (when common_titles_map is given).
+
+    Returns (freq_df, excel_bytes)
+    freq_df columns:
+      Machinery | Job Code | Job Title | Frequency (File1) | Frequency (File2) | Match
+
+    Match values: "✓ Match" | "✗ Differ" | "Only in File 1" | "Only in File 2"
+    """
+    def _agg_freq(df):
+        """Collapse to (Job Code, Job Title) → unique Frequency values joined."""
+        if df.empty:
+            return pd.DataFrame(columns=['Job Code', 'Job Title', 'Frequency'])
+        if 'Frequency' not in df.columns:
+            df = df.copy()
+            df['Frequency'] = '-'
+        return (
+            df.groupby(['Job Code', 'Job Title'], dropna=False)['Frequency']
+            .apply(lambda x: ', '.join(sorted(set(str(v) for v in x if str(v) not in ('', '-', 'nan')))) or '-')
+            .reset_index()
+        )
+
+    all_machinery = sorted(set(list(detail1.keys()) + list(detail2.keys())))
+    rows = []
+
+    for machinery in all_machinery:
+        df1 = detail1.get(machinery, pd.DataFrame(columns=['Job Code', 'Job Title', 'Frequency', 'Count']))
+        df2 = detail2.get(machinery, pd.DataFrame(columns=['Job Code', 'Job Title', 'Frequency', 'Count']))
+
+        if common_titles_map is not None:
+            common = common_titles_map.get(machinery, set())
+            if not common:
+                continue
+            if not df1.empty:
+                df1 = df1[df1['Job Title'].isin(common)].copy()
+            if not df2.empty:
+                df2 = df2[df2['Job Title'].isin(common)].copy()
+
+        agg1 = _agg_freq(df1).rename(columns={'Frequency': col1_label})
+        agg2 = _agg_freq(df2).rename(columns={'Frequency': col2_label})
+
+        if agg1.empty and agg2.empty:
+            continue
+
+        merged = pd.merge(agg1, agg2, on=['Job Code', 'Job Title'], how='outer').fillna('-')
+
+        def _match_status(row):
+            f1 = str(row[col1_label]).strip()
+            f2 = str(row[col2_label]).strip()
+            if f1 == '-' and f2 != '-':
+                return 'Only in File 2'
+            if f2 == '-' and f1 != '-':
+                return 'Only in File 1'
+            if f1 == f2:
+                return '✓ Match'
+            return '✗ Differ'
+
+        merged['Match'] = merged.apply(_match_status, axis=1)
+        merged.insert(0, 'Machinery', machinery)
+        rows.append(merged[['Machinery', 'Job Code', 'Job Title', col1_label, col2_label, 'Match']])
+
+    if rows:
+        freq_df = pd.concat(rows, ignore_index=True)
+    else:
+        freq_df = pd.DataFrame(
+            columns=['Machinery', 'Job Code', 'Job Title', col1_label, col2_label, 'Match']
+        )
+
+    # ---- Generate Excel ----
+    output = BytesIO()
+    freq_df.to_excel(output, index=False)
+    output.seek(0)
+
+    wb = load_workbook(output)
+    sheet = wb.active
+
+    fill_red    = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    fill_green  = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+    fill_orange = PatternFill(start_color="FCE4D6", end_color="FCE4D6", fill_type="solid")
+    fill_blue   = PatternFill(start_color="BDD7EE", end_color="BDD7EE", fill_type="solid")
+    hdr_fill    = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+    wrap_align  = Alignment(wrap_text=True, vertical='top')
+
+    for c in range(1, 7):
+        cell = sheet.cell(row=1, column=c)
+        cell.fill = hdr_fill
+        cell.font = Font(bold=True, color="FFFFFF")
+
+    sheet.column_dimensions['A'].width = 35
+    sheet.column_dimensions['B'].width = 15
+    sheet.column_dimensions['C'].width = 50
+    sheet.column_dimensions['D'].width = 18
+    sheet.column_dimensions['E'].width = 18
+    sheet.column_dimensions['F'].width = 16
+
+    for row in range(2, sheet.max_row + 1):
+        match_val = str(sheet.cell(row=row, column=6).value or '')
+        if match_val == 'Only in File 1':
+            fill = fill_orange
+        elif match_val == 'Only in File 2':
+            fill = fill_blue
+        elif match_val == '✗ Differ':
+            fill = fill_red
+        else:
+            fill = fill_green
+
+        for c in range(1, 7):
+            cell = sheet.cell(row=row, column=c)
+            cell.fill = fill
+            cell.alignment = wrap_align
+
+        if match_val in ('✗ Differ', 'Only in File 1', 'Only in File 2'):
+            sheet.cell(row=row, column=6).font = Font(bold=True)
+
+    output_final = BytesIO()
+    wb.save(output_final)
+    output_final.seek(0)
+
+    return freq_df, output_final.getvalue()
+
+
+def _get_file_label(filename):
+    """Return a human-friendly label from a filename, e.g. 'Harzand 15052026'.
+    Splits on underscores/spaces and drops long numeric timestamp segments."""
+    base = os.path.splitext(os.path.basename(filename))[0]
+    parts = re.split(r'[_\s]+', base)
+    parts = [p for p in parts if p and not (p.isdigit() and len(p) > 10)]
+    return ' '.join(parts)
+
+
 def process_files(file1_content, file2_content, file1_name, file2_name):
-    import pandas as pd
-    from openpyxl import load_workbook
-    from openpyxl.styles import PatternFill, Font
-    import os
-    from io import BytesIO
-
-    def extract_date_from_filename(filename):
-        base_name = os.path.splitext(os.path.basename(filename))[0]
-        date_part = base_name.split()[-1]
-        return f"{date_part[0:2]}-{date_part[2:4]}-{date_part[4:]}"
-
-    def get_vessel_name(df):
-        if "Vessel" in df.columns:
-            return str(df["Vessel"].dropna().iloc[0]).strip()
-        return "Unknown Vessel"
-
     df_system_mgmt = pd.read_csv(BytesIO(file1_content))
     df_pms_jobs = pd.read_csv(BytesIO(file2_content))
 
-    date1_fmt = extract_date_from_filename(file1_name)
-    date2_fmt = extract_date_from_filename(file2_name)
-    vessel1 = get_vessel_name(df_system_mgmt)
-    vessel2 = get_vessel_name(df_pms_jobs)
+    col1 = _get_file_label(file1_name)
+    col2 = _get_file_label(file2_name)
 
-    col1 = f"{vessel1} ({date1_fmt})"
-    col2 = f"{vessel2} ({date2_fmt})"
-
-    # Ensure uniqueness if vessel names are the same
     if col1 == col2:
         col1 += " [File 1]"
         col2 += " [File 2]"
 
-    print("[DEBUG] col1:", repr(col1))
-    print("[DEBUG] col2:", repr(col2))
-
-    # Auto-detect machinery column
     possible_machinery_columns = ['Machinery', 'Machinery Location', 'Component Name', 'System Name']
+    possible_title_columns = ['Job Title', 'Title']
+    possible_code_columns = ['Job Code', 'Code', 'Job No', 'Job No.', 'Job Number', 'JobCode']
 
     for col in possible_machinery_columns:
         if col in df_system_mgmt.columns:
@@ -589,30 +583,43 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
     else:
         raise ValueError("No recognized Machinery column in second file.")
 
-    from comparison_utils import rename_machinery  # use your existing function
-
     df_system_mgmt['Machinery'] = df_system_mgmt['Machinery'].apply(rename_machinery)
     df_pms_jobs['Machinery Location'] = df_pms_jobs['Machinery Location'].apply(rename_machinery)
 
+    def _merge_freq_cols(df):
+        """If both 'Frequency' and 'Frequency Type' columns exist, combine them
+        into a single 'Frequency' column (e.g. '3 Months' + 'Annual' → '3 Months Annual'),
+        then drop 'Frequency Type'."""
+        if 'Frequency' in df.columns and 'Frequency Type' in df.columns:
+            freq = df['Frequency'].fillna('').astype(str).str.strip()
+            ftype = df['Frequency Type'].fillna('').astype(str).str.strip()
+            combined = (freq + ' ' + ftype).str.strip()
+            df['Frequency'] = combined
+            df.drop(columns=['Frequency Type'], inplace=True)
+        return df
+
+    df_system_mgmt = _merge_freq_cols(df_system_mgmt)
+    df_pms_jobs    = _merge_freq_cols(df_pms_jobs)
+
+    title_col1 = _detect_col(df_system_mgmt, possible_title_columns)
+    code_col1  = _detect_col(df_system_mgmt, possible_code_columns)
+    freq_col1  = _detect_col(df_system_mgmt, ['Frequency'])
+    title_col2 = _detect_col(df_pms_jobs, possible_title_columns)
+    code_col2  = _detect_col(df_pms_jobs, possible_code_columns)
+    freq_col2  = _detect_col(df_pms_jobs, ['Frequency'])
+
+    detail1 = _build_job_detail(df_system_mgmt, 'Machinery', title_col1, code_col1, freq_col1)
+    detail2 = _build_job_detail(df_pms_jobs, 'Machinery Location', title_col2, code_col2, freq_col2)
+
+    freq_df, freq_excel = build_frequency_comparison(detail1, detail2, col1, col2)
+
     system_mgmt_counts = df_system_mgmt['Machinery'].value_counts().reset_index()
     pms_jobs_counts = df_pms_jobs['Machinery Location'].value_counts().reset_index()
-
-    if system_mgmt_counts.shape[1] != 2:
-        raise ValueError("Unexpected structure in system_mgmt_counts:\n" + str(system_mgmt_counts.head()))
-    if pms_jobs_counts.shape[1] != 2:
-        raise ValueError("Unexpected structure in pms_jobs_counts:\n" + str(pms_jobs_counts.head()))
 
     system_mgmt_counts.columns = ['Machinery', col1]
     pms_jobs_counts.columns = ['Machinery', col2]
 
     comparison_df = pd.merge(system_mgmt_counts, pms_jobs_counts, on='Machinery', how='outer').fillna(0)
-
-    print("[DEBUG] Actual merged DataFrame columns:", comparison_df.columns.tolist())
-
-    if col1 not in comparison_df.columns or col2 not in comparison_df.columns:
-        raise KeyError(
-            f"Column mismatch!\nExpected: {col1}, {col2}\nActual: {comparison_df.columns.tolist()}"
-        )
 
     comparison_df[col1] = comparison_df[col1].astype(int)
     comparison_df[col2] = comparison_df[col2].astype(int)
@@ -622,11 +629,10 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
         'Machinery': 'TOTAL',
         col1: comparison_df[col1].sum(),
         col2: comparison_df[col2].sum(),
-        'Difference': comparison_df["Difference"].sum()
+        'Difference': comparison_df['Difference'].sum()
     }
     comparison_df = pd.concat([comparison_df, pd.DataFrame([total_row])], ignore_index=True)
 
-    # Excel generation
     output = BytesIO()
     comparison_df.to_excel(output, index=False)
     output.seek(0)
@@ -634,7 +640,6 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
     wb = load_workbook(output)
     sheet = wb.active
 
-    # Styles
     fill_red = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
     fill_green = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
     fill_yellow = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
@@ -642,7 +647,6 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
     red_font = Font(color="9C0006")
     green_font = Font(color="006100")
 
-    # Highlighting
     for row in range(2, sheet.max_row + 1):
         machinery = sheet.cell(row=row, column=1)
         count1 = sheet.cell(row=row, column=2).value
@@ -665,12 +669,151 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
                     diff_cell.fill = fill_red
                     diff_cell.font = red_font
         else:
-            for col in range(1, 5):
-                sheet.cell(row=row, column=col).font = bold_font
+            for c in range(1, 5):
+                sheet.cell(row=row, column=c).font = bold_font
+
+    # ---- Job Detail Breakdown sheet ----
+    detail_sheet = wb.create_sheet(title="Job Detail Breakdown")
+
+    header_fill   = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+    header_font   = Font(bold=True, color="FFFFFF")
+    subhdr_fill1  = PatternFill(start_color="2E75B6", end_color="2E75B6", fill_type="solid")
+    subhdr_fill2  = PatternFill(start_color="ED7D31", end_color="ED7D31", fill_type="solid")
+    subhdr_font   = Font(bold=True, color="FFFFFF")
+    dup_fill      = PatternFill(start_color="FFF3CD", end_color="FFF3CD", fill_type="solid")
+    alt_fill      = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+    machinery_fill = PatternFill(start_color="D6E4F0", end_color="D6E4F0", fill_type="solid")
+    machinery_font = Font(bold=True)
+    wrap_align    = Alignment(wrap_text=True, vertical='top')
+
+    diff_machineries = comparison_df[
+        (comparison_df['Machinery'] != 'TOTAL') &
+        (comparison_df[col1] != comparison_df[col2])
+    ]['Machinery'].tolist()
+
+    detail_sheet.column_dimensions['A'].width = 8   # No.
+    detail_sheet.column_dimensions['B'].width = 22  # Job Code (file 1)
+    detail_sheet.column_dimensions['C'].width = 55  # Job Title (file 1)
+    detail_sheet.column_dimensions['D'].width = 8   # Count (file 1)
+    detail_sheet.column_dimensions['E'].width = 8   # No. (file 2)
+    detail_sheet.column_dimensions['F'].width = 22  # Job Code (file 2)
+    detail_sheet.column_dimensions['G'].width = 55  # Job Title (file 2)
+    detail_sheet.column_dimensions['H'].width = 8   # Count (file 2)
+
+    cur_row = 1
+
+    for machinery in diff_machineries:
+        # Machinery name header spanning all columns
+        detail_sheet.merge_cells(
+            start_row=cur_row, start_column=1,
+            end_row=cur_row, end_column=8
+        )
+        mach_cell = detail_sheet.cell(row=cur_row, column=1, value=machinery)
+        mach_cell.fill = machinery_fill
+        mach_cell.font = machinery_font
+        mach_cell.alignment = Alignment(vertical='center')
+        cur_row += 1
+
+        # Sub-header row 1: file labels (merged spans)
+        detail_sheet.merge_cells(
+            start_row=cur_row, start_column=1, end_row=cur_row, end_column=4
+        )
+        file1_cell = detail_sheet.cell(row=cur_row, column=1, value=col1)
+        file1_cell.fill = subhdr_fill1
+        file1_cell.font = subhdr_font
+        file1_cell.alignment = Alignment(vertical='center')
+
+        detail_sheet.merge_cells(
+            start_row=cur_row, start_column=5, end_row=cur_row, end_column=8
+        )
+        file2_cell = detail_sheet.cell(row=cur_row, column=5, value=col2)
+        file2_cell.fill = subhdr_fill2
+        file2_cell.font = subhdr_font
+        file2_cell.alignment = Alignment(vertical='center')
+        cur_row += 1
+
+        # Sub-header row 2: column labels
+        col_headers = [
+            (1, 'No.',       subhdr_fill1),
+            (2, 'Job Code',  subhdr_fill1),
+            (3, 'Job Title', subhdr_fill1),
+            (4, 'Count',     subhdr_fill1),
+            (5, 'No.',       subhdr_fill2),
+            (6, 'Job Code',  subhdr_fill2),
+            (7, 'Job Title', subhdr_fill2),
+            (8, 'Count',     subhdr_fill2),
+        ]
+        for c, val, fill in col_headers:
+            cell = detail_sheet.cell(row=cur_row, column=c, value=val)
+            cell.fill = fill
+            cell.font = subhdr_font
+            cell.alignment = wrap_align
+        cur_row += 1
+
+        df1 = detail1.get(machinery, pd.DataFrame(columns=['Job Code', 'Job Title', 'Count']))
+        df2 = detail2.get(machinery, pd.DataFrame(columns=['Job Code', 'Job Title', 'Count']))
+
+        max_rows = max(len(df1), len(df2), 1)
+        df1 = df1.reset_index(drop=True)
+        df2 = df2.reset_index(drop=True)
+
+        dup_codes1 = set(df1.loc[df1['Count'] > 1, 'Job Code'].tolist()) if not df1.empty else set()
+        dup_codes2 = set(df2.loc[df2['Count'] > 1, 'Job Code'].tolist()) if not df2.empty else set()
+
+        for i in range(max_rows):
+            row_alt = alt_fill if i % 2 == 1 else None
+            base_fill = row_alt or PatternFill()
+
+            # File 1 columns: A=No., B=Job Code, C=Job Title, D=Count (cols 1-4)
+            if i < len(df1):
+                r1 = df1.iloc[i]
+                is_dup1 = r1['Job Code'] in dup_codes1
+                fill1 = dup_fill if is_dup1 else base_fill
+                detail_sheet.cell(row=cur_row, column=1, value=i + 1).fill = fill1
+                for c, val in enumerate([r1['Job Code'], r1['Job Title'], int(r1['Count'])], 2):
+                    cell = detail_sheet.cell(row=cur_row, column=c, value=val)
+                    cell.fill = fill1
+                    cell.alignment = wrap_align
+                if is_dup1:
+                    detail_sheet.cell(row=cur_row, column=4).font = Font(bold=True, color="9C6500")
+            else:
+                for c in range(1, 5):
+                    detail_sheet.cell(row=cur_row, column=c, value='').fill = base_fill
+
+            # File 2 columns: E=No., F=Job Code, G=Job Title, H=Count (cols 5-8)
+            if i < len(df2):
+                r2 = df2.iloc[i]
+                is_dup2 = r2['Job Code'] in dup_codes2
+                fill2 = dup_fill if is_dup2 else base_fill
+                detail_sheet.cell(row=cur_row, column=5, value=i + 1).fill = fill2
+                for c, val in enumerate([r2['Job Code'], r2['Job Title'], int(r2['Count'])], 6):
+                    cell = detail_sheet.cell(row=cur_row, column=c, value=val)
+                    cell.fill = fill2
+                    cell.alignment = wrap_align
+                if is_dup2:
+                    detail_sheet.cell(row=cur_row, column=8).font = Font(bold=True, color="9C6500")
+            else:
+                for c in range(5, 9):
+                    detail_sheet.cell(row=cur_row, column=c, value='').fill = base_fill
+
+            cur_row += 1
+
+        cur_row += 1  # blank separator row
+
+    if not diff_machineries:
+        detail_sheet.cell(row=1, column=1, value="No machinery with count differences found.")
 
     output_final = BytesIO()
     wb.save(output_final)
     output_final.seek(0)
 
-    return comparison_df, output_final.getvalue()
+    job_detail = {
+        'col1': col1,
+        'col2': col2,
+        'detail1': detail1,
+        'detail2': detail2,
+        'freq_df': freq_df,
+        'freq_excel': freq_excel,
+    }
 
+    return comparison_df, output_final.getvalue(), job_detail
