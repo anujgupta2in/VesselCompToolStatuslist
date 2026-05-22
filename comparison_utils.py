@@ -855,3 +855,213 @@ def process_files(file1_content, file2_content, file1_name, file2_name):
     }
 
     return comparison_df, output_final.getvalue(), job_detail
+
+
+# ---------------------------------------------------------------------------
+# Tab 4 – New Jobs Analysis
+# ---------------------------------------------------------------------------
+
+def build_new_jobs_analysis(file1_content, file2_content, file1_name, file2_name):
+    """Filter BOTH files to rows where Status == 'New', then compare per machinery.
+
+    Summary columns:
+        Machinery Location | New in {label1} | New in {label2} |
+        Common in Both | Not in {label1} | Not in {label2}
+
+    "New in X"   = total rows (incl. duplicates) with Status=New in that file
+    "Common"     = distinct job codes present as New in both files
+    "Not in X"   = distinct codes New in the other file but absent from X
+
+    detail_dict: machinery → DataFrame
+        Job Code | Job Title | Machinery | File Name | Job Status | Match
+    """
+    from openpyxl import Workbook
+
+    df1 = pd.read_csv(BytesIO(file1_content))
+    df2 = pd.read_csv(BytesIO(file2_content))
+
+    label1 = _get_file_label(file1_name)
+    label2 = _get_file_label(file2_name)
+
+    possible_machinery = ['Machinery', 'Machinery Location', 'Component Name', 'System Name']
+    possible_title     = ['Job Title', 'Title']
+    possible_code      = ['Job Code', 'Code', 'Job No', 'Job No.', 'Job Number', 'JobCode']
+    possible_status    = ['Status', 'Job Status']
+
+    for col in possible_machinery:
+        if col in df1.columns:
+            df1.rename(columns={col: 'Machinery'}, inplace=True)
+            break
+    else:
+        raise ValueError("No recognised Machinery column in first file.")
+
+    for col in possible_machinery:
+        if col in df2.columns:
+            df2.rename(columns={col: 'Machinery'}, inplace=True)
+            break
+    else:
+        raise ValueError("No recognised Machinery column in second file.")
+
+    df1['Machinery'] = df1['Machinery'].apply(rename_machinery)
+    df2['Machinery'] = df2['Machinery'].apply(rename_machinery)
+
+    title_col1 = _detect_col(df1, possible_title)
+    code_col1  = _detect_col(df1, possible_code)
+    title_col2 = _detect_col(df2, possible_title)
+    code_col2  = _detect_col(df2, possible_code)
+    status_col1 = _detect_col(df1, possible_status)
+    status_col2 = _detect_col(df2, possible_status)
+
+    missing = []
+    if not status_col1:
+        missing.append(f"first file (expected: {', '.join(possible_status)})")
+    if not status_col2:
+        missing.append(f"second file (expected: {', '.join(possible_status)})")
+    if missing:
+        raise ValueError("No Status column found in: " + "; ".join(missing))
+
+    df1_new = df1[df1[status_col1].astype(str).str.strip().str.lower() == 'new'].copy()
+    df2_new = df2[df2[status_col2].astype(str).str.strip().str.lower() == 'new'].copy()
+
+    all_machinery = sorted(set(
+        df1_new['Machinery'].dropna().astype(str).tolist() +
+        df2_new['Machinery'].dropna().astype(str).tolist()
+    ))
+
+    col_new1      = f'New in {label1}'
+    col_new2      = f'New in {label2}'
+    col_common    = 'Common in Both'
+    col_not_in1   = f'Not in {label1}'
+    col_not_in2   = f'Not in {label2}'
+
+    summary_rows = []
+    detail_dict  = {}
+
+    def _pick_title(df, code_col, title_col, code):
+        if not code_col:
+            return ''
+        sub = df[df[code_col].astype(str).str.strip() == code]
+        if title_col and not sub.empty:
+            return str(sub.iloc[0][title_col]).strip()
+        return ''
+
+    for machinery in all_machinery:
+        m1 = df1_new[df1_new['Machinery'].astype(str) == machinery]
+        m2 = df2_new[df2_new['Machinery'].astype(str) == machinery]
+
+        count1 = len(m1)
+        count2 = len(m2)
+
+        codes1 = set(m1[code_col1].astype(str).str.strip()) if code_col1 and not m1.empty else set()
+        codes2 = set(m2[code_col2].astype(str).str.strip()) if code_col2 and not m2.empty else set()
+
+        in_both  = codes1 & codes2
+        only1    = codes1 - codes2
+        only2    = codes2 - codes1
+
+        summary_rows.append({
+            'Machinery Location': machinery,
+            col_new1:   count1,
+            col_new2:   count2,
+            col_common: len(in_both),
+            col_not_in1: len(only2),   # in file2 New but not file1
+            col_not_in2: len(only1),   # in file1 New but not file2
+        })
+
+        rows = []
+        for code in sorted(in_both):
+            title = _pick_title(m1, code_col1, title_col1, code) or \
+                    _pick_title(m2, code_col2, title_col2, code)
+            rows.append({'Job Code': code, 'Job Title': title,
+                         'Machinery': machinery,
+                         'File Name': f'{label1} & {label2}',
+                         'Job Status': 'New', 'Match': 'In Both'})
+        for code in sorted(only1):
+            rows.append({'Job Code': code,
+                         'Job Title': _pick_title(m1, code_col1, title_col1, code),
+                         'Machinery': machinery,
+                         'File Name': label1,
+                         'Job Status': 'New', 'Match': f'Only in {label1}'})
+        for code in sorted(only2):
+            rows.append({'Job Code': code,
+                         'Job Title': _pick_title(m2, code_col2, title_col2, code),
+                         'Machinery': machinery,
+                         'File Name': label2,
+                         'Job Status': 'New', 'Match': f'Only in {label2}'})
+
+        if rows:
+            detail_dict[machinery] = pd.DataFrame(rows)
+
+    summary_df = pd.DataFrame(summary_rows) if summary_rows else pd.DataFrame(
+        columns=['Machinery Location', col_new1, col_new2,
+                 col_common, col_not_in1, col_not_in2]
+    )
+
+    # ---- Excel export ----
+    wb = Workbook()
+    ws_sum = wb.active
+    ws_sum.title = "New Jobs Summary"
+
+    hdr_fill = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+    hdr_font = Font(bold=True, color="FFFFFF")
+    grn_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+    ora_fill = PatternFill(start_color="FFD180", end_color="FFD180", fill_type="solid")
+    blu_fill = PatternFill(start_color="BBDEFB", end_color="BBDEFB", fill_type="solid")
+    alt_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+    wrap_aln = Alignment(wrap_text=True, vertical='top')
+
+    sum_headers = list(summary_df.columns)
+    col_widths  = [40, 18, 18, 16, 20, 20]
+    for ci, (hdr, w) in enumerate(zip(sum_headers, col_widths), 1):
+        cell = ws_sum.cell(row=1, column=ci, value=hdr)
+        cell.fill = hdr_fill
+        cell.font = hdr_font
+        ws_sum.column_dimensions[cell.column_letter].width = w
+
+    for ri, row_data in enumerate(summary_df.itertuples(index=False), 2):
+        base = alt_fill if ri % 2 == 0 else PatternFill()
+        for ci, val in enumerate(row_data, 1):
+            ws_sum.cell(row=ri, column=ci, value=val).fill = base
+        v_common = row_data[3]
+        v_not1   = row_data[4]
+        v_not2   = row_data[5]
+        if v_common > 0:
+            ws_sum.cell(row=ri, column=4).fill = grn_fill
+        if v_not1 > 0:
+            ws_sum.cell(row=ri, column=5).fill = ora_fill
+        if v_not2 > 0:
+            ws_sum.cell(row=ri, column=6).fill = blu_fill
+
+    # Sheet 2: Detail
+    ws_det = wb.create_sheet(title="New Jobs Detail")
+    mach_fill    = PatternFill(start_color="D6E4F0", end_color="D6E4F0", fill_type="solid")
+    det_hdr_fill = PatternFill(start_color="2E75B6", end_color="2E75B6", fill_type="solid")
+    det_cols     = ['Job Code', 'Job Title', 'Machinery', 'File Name', 'Job Status', 'Match']
+    det_widths   = [22, 55, 35, 28, 12, 28]
+
+    for ci, (hdr, w) in enumerate(zip(det_cols, det_widths), 1):
+        cell = ws_det.cell(row=1, column=ci, value=hdr)
+        cell.fill = det_hdr_fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        ws_det.column_dimensions[cell.column_letter].width = w
+
+    det_cur = 2
+    for _, df_det in detail_dict.items():
+        for row_det in df_det.itertuples(index=False):
+            match = str(row_det[5])
+            rfill = grn_fill if match == 'In Both' else (
+                    ora_fill if match.startswith('Only in ' + label1) else blu_fill)
+            for ci, val in enumerate(row_det, 1):
+                cell = ws_det.cell(row=det_cur, column=ci, value=val)
+                cell.fill = rfill
+                cell.alignment = wrap_aln
+            det_cur += 1
+
+    if not detail_dict:
+        ws_det.cell(row=2, column=1, value="No 'New' status jobs found in either file.")
+
+    out = BytesIO()
+    wb.save(out)
+    out.seek(0)
+
+    return summary_df, detail_dict, out.getvalue(), label1, label2
