@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from new_title_comparison import compare_titles
-from comparison_utils import process_files, build_frequency_comparison
+from comparison_utils import process_files, build_frequency_comparison, build_new_jobs_analysis
 import io
 
 st.set_page_config(
@@ -47,6 +47,8 @@ if 'count_excel_data' not in st.session_state:
     st.session_state.count_excel_data = None
 if 'job_detail' not in st.session_state:
     st.session_state.job_detail = None
+if 'new_jobs_analysis' not in st.session_state:
+    st.session_state.new_jobs_analysis = None
 
 if file1 and file2:
     try:
@@ -84,6 +86,20 @@ if file1 and file2:
             job_detail['freq_df']    = freq_df_filtered
             job_detail['freq_excel'] = freq_excel_filtered
 
+            try:
+                new_summary, new_detail, new_excel, new_label1, new_label2 = build_new_jobs_analysis(
+                    file1_content, file2_content, file1.name, file2.name
+                )
+                st.session_state.new_jobs_analysis = {
+                    'summary': new_summary,
+                    'detail': new_detail,
+                    'excel': new_excel,
+                    'label1': new_label1,
+                    'label2': new_label2,
+                }
+            except Exception as nj_err:
+                st.session_state.new_jobs_analysis = {'error': str(nj_err)}
+
             st.session_state.title_diff_df = title_diff_df
             st.session_state.machinery_diff_list = machinery_diff_list
             st.session_state.title_excel_data = title_excel_data
@@ -96,7 +112,7 @@ if file1 and file2:
         st.error(f"Error processing files: {str(e)}")
         st.exception(e)
 
-tab1, tab2, tab3 = st.tabs(["Job Title Comparison", "Machinery Count Comparison", "Frequency Interval Comparison"])
+tab1, tab2, tab3, tab4 = st.tabs(["Job Title Comparison", "Machinery Count Comparison", "Frequency Interval Comparison", "New Jobs Analysis"])
 
 with tab1:
     st.header("Job Title Comparison Results")
@@ -359,3 +375,111 @@ with tab3:
             st.info("No frequency interval data available. Please re-upload both CSV files.")
     else:
         st.info("Please upload both CSV files to generate the frequency interval comparison report.")
+
+with tab4:
+    st.header("New Jobs Analysis")
+    st.markdown(
+        "Filters **both files** to rows where **Job Status = New**, "
+        "then compares those jobs per machinery location."
+    )
+
+    nja = st.session_state.new_jobs_analysis
+
+    if nja is None:
+        st.info("Please upload both CSV files to generate the New Jobs analysis.")
+    elif 'error' in nja:
+        st.warning(f"New Jobs Analysis could not run: {nja['error']}")
+    else:
+        summary_df = nja['summary']
+        detail     = nja['detail']
+        new_excel  = nja['excel']
+        lbl1       = nja['label1']
+        lbl2       = nja['label2']
+
+        col_new1   = f'New in {lbl1}'
+        col_new2   = f'New in {lbl2}'
+        col_common = 'Common in Both'
+        col_not1   = f'Not in {lbl1}'
+        col_not2   = f'Not in {lbl2}'
+
+        # ── Summary metrics ──────────────────────────────────────────────────
+        total_mach   = len(summary_df)
+        total_new1   = int(summary_df[col_new1].sum())   if col_new1   in summary_df.columns else 0
+        total_new2   = int(summary_df[col_new2].sum())   if col_new2   in summary_df.columns else 0
+        total_common = int(summary_df[col_common].sum()) if col_common in summary_df.columns else 0
+        total_not1   = int(summary_df[col_not1].sum())   if col_not1   in summary_df.columns else 0
+        total_not2   = int(summary_df[col_not2].sum())   if col_not2   in summary_df.columns else 0
+
+        c1, c2, c3, c4, c5, c6 = st.columns(6)
+        c1.metric("Machinery Items",       total_mach)
+        c2.metric(f"New in {lbl1}",        total_new1)
+        c3.metric(f"New in {lbl2}",        total_new2)
+        c4.metric("✅ Common in Both",     total_common)
+        c5.metric(f"🟠 Not in {lbl1}",    total_not1)
+        c6.metric(f"🔵 Not in {lbl2}",    total_not2)
+
+        # ── Legend ───────────────────────────────────────────────────────────
+        st.markdown(f"""
+<div style="border:1px solid #ddd;border-radius:6px;padding:10px 14px;background:#fafafa;margin:8px 0;font-size:0.9em;">
+<strong>Legend</strong>&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#C6EFCE;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Common in Both — job code is New in both files&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#FFD180;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Not in {lbl1} — New in {lbl2} but absent from {lbl1}&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#BBDEFB;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Not in {lbl2} — New in {lbl1} but absent from {lbl2}
+</div>
+""", unsafe_allow_html=True)
+
+        # ── Summary table ─────────────────────────────────────────────────────
+        st.subheader("📊 Summary by Machinery Location")
+
+        def highlight_summary(row):
+            styles = [''] * len(row)
+            cols = list(row.index)
+            if col_common in cols and row[col_common] > 0:
+                styles[cols.index(col_common)] = 'background-color: #C6EFCE'
+            if col_not1 in cols and row[col_not1] > 0:
+                styles[cols.index(col_not1)] = 'background-color: #FFD180'
+            if col_not2 in cols and row[col_not2] > 0:
+                styles[cols.index(col_not2)] = 'background-color: #BBDEFB'
+            return styles
+
+        styled_sum = summary_df.style.apply(highlight_summary, axis=1)
+        st.dataframe(styled_sum, use_container_width=True, hide_index=True)
+
+        st.download_button(
+            label="📥 Download New Jobs Analysis Excel",
+            data=new_excel,
+            file_name="New_Jobs_Analysis.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        # ── Per-machinery detail expanders ────────────────────────────────────
+        if detail:
+            st.markdown("---")
+            st.subheader("🔍 Job Detail by Machinery Location")
+
+            for machinery, df_det in detail.items():
+                n_both = len(df_det[df_det['Match'] == 'In Both'])
+                n_not1 = len(df_det[df_det['Match'] == f'Only in {lbl1}'])
+                n_not2 = len(df_det[df_det['Match'] == f'Only in {lbl2}'])
+                has_diff = n_not1 > 0 or n_not2 > 0
+                icon = "⚠️" if has_diff else "✅"
+                label_text = (
+                    f"{icon} {machinery}  —  "
+                    f"{n_both} common · {n_not1} only in {lbl1} · {n_not2} only in {lbl2}"
+                )
+
+                with st.expander(label_text, expanded=False):
+                    def highlight_det(row, _l1=lbl1, _l2=lbl2):
+                        m = row.get('Match', '')
+                        if m == 'In Both':
+                            return ['background-color: #C6EFCE; color: #006100'] * len(row)
+                        elif m == f'Only in {_l1}':
+                            return ['background-color: #BBDEFB; color: #004494'] * len(row)
+                        elif m == f'Only in {_l2}':
+                            return ['background-color: #FFD180; color: #7D4E00'] * len(row)
+                        return [''] * len(row)
+
+                    styled_det = df_det.style.apply(highlight_det, axis=1)
+                    st.dataframe(styled_det, use_container_width=True, hide_index=True)
+        else:
+            st.info("No 'New' status jobs found in either file.")
