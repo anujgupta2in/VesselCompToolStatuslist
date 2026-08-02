@@ -1065,3 +1065,208 @@ def build_new_jobs_analysis(file1_content, file2_content, file1_name, file2_name
     out.seek(0)
 
     return summary_df, detail_dict, out.getvalue(), label1, label2
+
+
+# ---------------------------------------------------------------------------
+# Tab 5 – Critical Jobs Analysis
+# ---------------------------------------------------------------------------
+
+def build_critical_jobs_analysis(file1_content, file2_content, file1_name, file2_name):
+    """Filter BOTH files to rows where Column B (2nd column) == 'C' (critical),
+    then compare per machinery location.
+
+    Summary columns:
+        Machinery Location | Critical in {label1} | Critical in {label2} |
+        Common in Both | Not in {label1} | Not in {label2}
+
+    detail_dict: machinery → DataFrame
+        Job Code | Job Title | Machinery | File Name | Match
+    """
+    from openpyxl import Workbook
+
+    df1 = pd.read_csv(BytesIO(file1_content))
+    df2 = pd.read_csv(BytesIO(file2_content))
+
+    label1 = _get_file_label(file1_name)
+    label2 = _get_file_label(file2_name)
+
+    def _filter_critical(df):
+        """Return only rows where the 2nd column value is 'C'."""
+        if df.shape[1] < 2:
+            return df.iloc[0:0].copy()
+        col_b = df.columns[1]
+        return df[df[col_b].astype(str).str.strip().str.upper() == 'C'].copy()
+
+    df1_crit = _filter_critical(df1)
+    df2_crit = _filter_critical(df2)
+
+    possible_machinery = ['Machinery', 'Machinery Location', 'Component Name', 'System Name']
+    possible_title     = ['Job Title', 'Title']
+    possible_code      = ['Job Code', 'Code', 'Job No', 'Job No.', 'Job Number', 'JobCode']
+
+    for col in possible_machinery:
+        if col in df1_crit.columns:
+            df1_crit = df1_crit.rename(columns={col: 'Machinery'})
+            break
+    else:
+        raise ValueError("No recognised Machinery column in first file.")
+
+    for col in possible_machinery:
+        if col in df2_crit.columns:
+            df2_crit = df2_crit.rename(columns={col: 'Machinery'})
+            break
+    else:
+        raise ValueError("No recognised Machinery column in second file.")
+
+    df1_crit['Machinery'] = df1_crit['Machinery'].apply(rename_machinery)
+    df2_crit['Machinery'] = df2_crit['Machinery'].apply(rename_machinery)
+
+    title_col1 = _detect_col(df1_crit, possible_title)
+    code_col1  = _detect_col(df1_crit, possible_code)
+    title_col2 = _detect_col(df2_crit, possible_title)
+    code_col2  = _detect_col(df2_crit, possible_code)
+
+    col_crit1    = f'Critical in {label1}'
+    col_crit2    = f'Critical in {label2}'
+    col_common   = 'Common in Both'
+    col_not_in1  = f'Not in {label1}'
+    col_not_in2  = f'Not in {label2}'
+
+    all_machinery = sorted(set(
+        df1_crit['Machinery'].dropna().astype(str).tolist() +
+        df2_crit['Machinery'].dropna().astype(str).tolist()
+    ))
+
+    summary_rows = []
+    detail_dict  = {}
+
+    def _pick_title(df, code_col, title_col, code):
+        if not code_col:
+            return ''
+        sub = df[df[code_col].astype(str).str.strip() == code]
+        if title_col and not sub.empty:
+            return str(sub.iloc[0][title_col]).strip()
+        return ''
+
+    for machinery in all_machinery:
+        m1 = df1_crit[df1_crit['Machinery'].astype(str) == machinery]
+        m2 = df2_crit[df2_crit['Machinery'].astype(str) == machinery]
+
+        count1 = len(m1)
+        count2 = len(m2)
+
+        codes1 = set(m1[code_col1].astype(str).str.strip()) if code_col1 and not m1.empty else set()
+        codes2 = set(m2[code_col2].astype(str).str.strip()) if code_col2 and not m2.empty else set()
+
+        in_both = codes1 & codes2
+        only1   = codes1 - codes2
+        only2   = codes2 - codes1
+
+        summary_rows.append({
+            'Machinery Location': machinery,
+            col_crit1:    count1,
+            col_crit2:    count2,
+            col_common:   len(in_both),
+            col_not_in1:  len(only2),
+            col_not_in2:  len(only1),
+        })
+
+        detail_rows = []
+        for code in sorted(in_both):
+            t1 = _pick_title(m1, code_col1, title_col1, code)
+            t2 = _pick_title(m2, code_col2, title_col2, code)
+            title = t1 or t2
+            detail_rows.append({
+                'Job Code': code, 'Job Title': title,
+                'Machinery': machinery,
+                'File Name': f'{label1} & {label2}',
+                'Match': 'In Both',
+            })
+        for code in sorted(only1):
+            title = _pick_title(m1, code_col1, title_col1, code)
+            detail_rows.append({
+                'Job Code': code, 'Job Title': title,
+                'Machinery': machinery,
+                'File Name': label1,
+                'Match': f'Only in {label1}',
+            })
+        for code in sorted(only2):
+            title = _pick_title(m2, code_col2, title_col2, code)
+            detail_rows.append({
+                'Job Code': code, 'Job Title': title,
+                'Machinery': machinery,
+                'File Name': label2,
+                'Match': f'Only in {label2}',
+            })
+
+        if detail_rows:
+            detail_dict[machinery] = pd.DataFrame(detail_rows)
+
+    summary_df = pd.DataFrame(summary_rows, columns=[
+        'Machinery Location', col_crit1, col_crit2,
+        col_common, col_not_in1, col_not_in2,
+    ])
+
+    # ── Excel export ─────────────────────────────────────────────────────────
+    wb = Workbook()
+
+    grn_fill     = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+    ora_fill     = PatternFill(start_color="FFD180", end_color="FFD180", fill_type="solid")
+    blu_fill     = PatternFill(start_color="BBDEFB", end_color="BBDEFB", fill_type="solid")
+    hdr_fill     = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+    det_hdr_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    wrap_aln     = Alignment(wrap_text=True, vertical='top')
+
+    # Summary sheet
+    ws_sum = wb.active
+    ws_sum.title = "Critical Jobs Summary"
+    sum_cols = list(summary_df.columns)
+    for ci, hdr in enumerate(sum_cols, 1):
+        cell = ws_sum.cell(row=1, column=ci, value=hdr)
+        cell.fill = hdr_fill
+        cell.font = Font(bold=True, color="FFFFFF")
+    sum_widths = [40, 20, 20, 18, 20, 20]
+    for ci, w in enumerate(sum_widths, 1):
+        ws_sum.column_dimensions[ws_sum.cell(row=1, column=ci).column_letter].width = w
+
+    for ri, row_data in enumerate(summary_df.itertuples(index=False), 2):
+        for ci, val in enumerate(row_data, 1):
+            cell = ws_sum.cell(row=ri, column=ci, value=val)
+            col_name = sum_cols[ci - 1]
+            if col_name == col_common and val > 0:
+                cell.fill = grn_fill
+            elif col_name == col_not_in1 and val > 0:
+                cell.fill = ora_fill
+            elif col_name == col_not_in2 and val > 0:
+                cell.fill = blu_fill
+
+    # Detail sheet
+    ws_det = wb.create_sheet("Critical Jobs Detail")
+    det_cols   = ['Job Code', 'Job Title', 'Machinery', 'File Name', 'Match']
+    det_widths = [14, 60, 40, 30, 28]
+    for ci, (hdr, w) in enumerate(zip(det_cols, det_widths), 1):
+        cell = ws_det.cell(row=1, column=ci, value=hdr)
+        cell.fill = det_hdr_fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        ws_det.column_dimensions[cell.column_letter].width = w
+
+    det_cur = 2
+    for _, df_det in detail_dict.items():
+        for row_det in df_det.itertuples(index=False):
+            match = str(row_det[4])
+            rfill = grn_fill if match == 'In Both' else (
+                    blu_fill if match.startswith('Only in ' + label1) else ora_fill)
+            for ci, val in enumerate(row_det, 1):
+                cell = ws_det.cell(row=det_cur, column=ci, value=val)
+                cell.fill = rfill
+                cell.alignment = wrap_aln
+            det_cur += 1
+
+    if not detail_dict:
+        ws_det.cell(row=2, column=1, value="No critical jobs (Column B = 'C') found in either file.")
+
+    out = BytesIO()
+    wb.save(out)
+    out.seek(0)
+
+    return summary_df, detail_dict, out.getvalue(), label1, label2
