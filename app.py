@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from new_title_comparison import compare_titles
-from comparison_utils import process_files, build_frequency_comparison, build_new_jobs_analysis
+from comparison_utils import process_files, build_frequency_comparison, build_new_jobs_analysis, build_critical_jobs_analysis
 import io
 
 st.set_page_config(
@@ -49,6 +49,8 @@ if 'job_detail' not in st.session_state:
     st.session_state.job_detail = None
 if 'new_jobs_analysis' not in st.session_state:
     st.session_state.new_jobs_analysis = None
+if 'critical_jobs_analysis' not in st.session_state:
+    st.session_state.critical_jobs_analysis = None
 
 if file1 and file2:
     try:
@@ -100,6 +102,20 @@ if file1 and file2:
             except Exception as nj_err:
                 st.session_state.new_jobs_analysis = {'error': str(nj_err)}
 
+            try:
+                crit_summary, crit_detail, crit_excel, crit_label1, crit_label2 = build_critical_jobs_analysis(
+                    file1_content, file2_content, file1.name, file2.name
+                )
+                st.session_state.critical_jobs_analysis = {
+                    'summary': crit_summary,
+                    'detail': crit_detail,
+                    'excel': crit_excel,
+                    'label1': crit_label1,
+                    'label2': crit_label2,
+                }
+            except Exception as cj_err:
+                st.session_state.critical_jobs_analysis = {'error': str(cj_err)}
+
             st.session_state.title_diff_df = title_diff_df
             st.session_state.machinery_diff_list = machinery_diff_list
             st.session_state.title_excel_data = title_excel_data
@@ -112,7 +128,7 @@ if file1 and file2:
         st.error(f"Error processing files: {str(e)}")
         st.exception(e)
 
-tab1, tab2, tab3, tab4 = st.tabs(["Job Title Comparison", "Machinery Count Comparison", "Frequency Interval Comparison", "New Jobs Analysis"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Job Title Comparison", "Machinery Count Comparison", "Frequency Interval Comparison", "New Jobs Analysis", "Critical Jobs"])
 
 with tab1:
     st.header("Job Title Comparison Results")
@@ -483,3 +499,111 @@ with tab4:
                     st.dataframe(styled_det, use_container_width=True, hide_index=True)
         else:
             st.info("No 'New' status jobs found in either file.")
+
+with tab5:
+    st.header("Critical Jobs Comparison")
+    st.markdown(
+        "Filters **both files** to rows where **Column B = C** (critical jobs), "
+        "then compares those jobs per machinery location between the two files."
+    )
+
+    cja = st.session_state.critical_jobs_analysis
+
+    if cja is None:
+        st.info("Please upload both CSV files to generate the Critical Jobs analysis.")
+    elif 'error' in cja:
+        st.warning(f"Critical Jobs Analysis could not run: {cja['error']}")
+    else:
+        summary_df = cja['summary']
+        detail     = cja['detail']
+        crit_excel = cja['excel']
+        lbl1       = cja['label1']
+        lbl2       = cja['label2']
+
+        col_crit1  = f'Critical in {lbl1}'
+        col_crit2  = f'Critical in {lbl2}'
+        col_common = 'Common in Both'
+        col_not1   = f'Not in {lbl1}'
+        col_not2   = f'Not in {lbl2}'
+
+        # ── Summary metrics ──────────────────────────────────────────────────
+        total_mach    = len(summary_df)
+        total_crit1   = int(summary_df[col_crit1].sum())  if col_crit1  in summary_df.columns else 0
+        total_crit2   = int(summary_df[col_crit2].sum())  if col_crit2  in summary_df.columns else 0
+        total_common  = int(summary_df[col_common].sum()) if col_common in summary_df.columns else 0
+        total_not1    = int(summary_df[col_not1].sum())   if col_not1   in summary_df.columns else 0
+        total_not2    = int(summary_df[col_not2].sum())   if col_not2   in summary_df.columns else 0
+
+        c1, c2, c3, c4, c5, c6 = st.columns(6)
+        c1.metric("Machinery Items",        total_mach)
+        c2.metric(f"Critical in {lbl1}",    total_crit1)
+        c3.metric(f"Critical in {lbl2}",    total_crit2)
+        c4.metric("✅ Common in Both",      total_common)
+        c5.metric(f"🟠 Not in {lbl1}",     total_not1)
+        c6.metric(f"🔵 Not in {lbl2}",     total_not2)
+
+        # ── Legend ───────────────────────────────────────────────────────────
+        st.markdown(f"""
+<div style="border:1px solid #ddd;border-radius:6px;padding:10px 14px;background:#fafafa;margin:8px 0;font-size:0.9em;">
+<strong>Legend</strong>&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#C6EFCE;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Common in Both — critical job exists in both files&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#FFD180;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Not in {lbl1} — critical in {lbl2} but absent from {lbl1}&nbsp;&nbsp;
+<span style="display:inline-block;width:14px;height:14px;background:#BBDEFB;border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>Not in {lbl2} — critical in {lbl1} but absent from {lbl2}
+</div>
+""", unsafe_allow_html=True)
+
+        # ── Summary table ─────────────────────────────────────────────────────
+        st.subheader("📊 Summary by Machinery Location")
+
+        def highlight_crit_summary(row):
+            styles = [''] * len(row)
+            cols = list(row.index)
+            if col_common in cols and row[col_common] > 0:
+                styles[cols.index(col_common)] = 'background-color: #C6EFCE'
+            if col_not1 in cols and row[col_not1] > 0:
+                styles[cols.index(col_not1)] = 'background-color: #FFD180'
+            if col_not2 in cols and row[col_not2] > 0:
+                styles[cols.index(col_not2)] = 'background-color: #BBDEFB'
+            return styles
+
+        styled_sum = summary_df.style.apply(highlight_crit_summary, axis=1)
+        st.dataframe(styled_sum, use_container_width=True, hide_index=True)
+
+        st.download_button(
+            label="📥 Download Critical Jobs Excel",
+            data=crit_excel,
+            file_name="Critical_Jobs_Analysis.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        # ── Per-machinery detail expanders ────────────────────────────────────
+        if detail:
+            st.markdown("---")
+            st.subheader("🔍 Critical Job Detail by Machinery Location")
+
+            for machinery, df_det in detail.items():
+                n_both = len(df_det[df_det['Match'] == 'In Both'])
+                n_only1 = len(df_det[df_det['Match'] == f'Only in {lbl1}'])
+                n_only2 = len(df_det[df_det['Match'] == f'Only in {lbl2}'])
+                has_diff = n_only1 > 0 or n_only2 > 0
+                icon = "⚠️" if has_diff else "✅"
+                label_text = (
+                    f"{icon} {machinery}  —  "
+                    f"{n_both} common · {n_only1} only in {lbl1} · {n_only2} only in {lbl2}"
+                )
+
+                with st.expander(label_text, expanded=False):
+                    def highlight_crit_det(row, _l1=lbl1, _l2=lbl2):
+                        m = row.get('Match', '')
+                        if m == 'In Both':
+                            return ['background-color: #C6EFCE; color: #006100'] * len(row)
+                        elif m == f'Only in {_l1}':
+                            return ['background-color: #BBDEFB; color: #004494'] * len(row)
+                        elif m == f'Only in {_l2}':
+                            return ['background-color: #FFD180; color: #7D4E00'] * len(row)
+                        return [''] * len(row)
+
+                    styled_det = df_det.style.apply(highlight_crit_det, axis=1)
+                    st.dataframe(styled_det, use_container_width=True, hide_index=True)
+        else:
+            st.info("No critical jobs (Column B = 'C') found in either file.")
